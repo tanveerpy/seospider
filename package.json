@@ -23,6 +23,7 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/cheerio": "^0.22.35",
     "@types/node": "^20",
     "@types/react": "^19",
