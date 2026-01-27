@@ -98,7 +98,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {/* Persistent Footer Creds */}
                 <div style={{ marginTop: '20px', padding: '0 16px' }}>
                     <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '8px' }}>
-                        Built by <strong style={{ color: '#fff' }}>Tanveer</strong>
+                        Built by <strong style={{ color: '#fff' }}>Tanveer Ahmed</strong>
                     </div>
                     <a href="mailto:dahajsainak@gmail.com" style={{
                         fontSize: '11px',

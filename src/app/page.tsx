@@ -345,7 +345,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: '1200px', margin: '60px auto 0 auto', paddingTop: '32px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <span style={{ color: '#94a3b8' }}>Built by <strong style={{ color: '#fff' }}>Tanveer</strong></span>
+            <span style={{ color: '#94a3b8' }}>Built by <strong style={{ color: '#fff' }}>Tanveer Ahmed</strong></span>
             <a href="mailto:dahajsainak@gmail.com" style={{
               padding: '8px 16px',
               background: 'rgba(34, 197, 94, 0.1)',
