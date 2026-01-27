@@ -94,12 +94,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         Settings
                     </div>
                 </div>
+
+                {/* Persistent Footer Creds */}
+                <div style={{ marginTop: '20px', padding: '0 16px' }}>
+                    <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '8px' }}>
+                        Built by <strong style={{ color: '#fff' }}>Tanveer</strong>
+                    </div>
+                    <a href="mailto:dahajsainak@gmail.com" style={{
+                        fontSize: '11px',
+                        color: '#4ade80',
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        opacity: 0.8
+                    }}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80' }}></div>
+                        Contact Me
+                    </a>
+                </div>
             </aside>
 
             {/* Main Content Area */}
-            <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', flex: 1 }}>
+            < main style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', flex: 1 }
+            }>
                 {/* Top Header Bar */}
-                <header className="glass-panel" style={{
+                < header className="glass-panel" style={{
                     margin: '24px 32px 0 32px',
                     padding: '12px 24px',
                     display: 'flex',
@@ -147,15 +167,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>CRAWLED</div>
                         <div style={{ fontSize: '18px', fontWeight: 800, color: '#22c55e' }}>{Object.keys(pages).length} <span style={{ fontSize: '12px', color: '#64748b' }}>URLs</span></div>
                     </div>
-                </header>
+                </header >
 
                 {/* Viewport for Pages */}
-                <div style={{ flex: 1, overflow: 'auto' }}>
+                < div style={{ flex: 1, overflow: 'auto' }}>
                     {children}
-                </div>
-            </main>
+                </div >
+            </main >
 
             {showConfig && <ConfigModal onClose={() => setShowConfig(false)} />}
-        </div>
+        </div >
     );
 }
