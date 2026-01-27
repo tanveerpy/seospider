@@ -32,17 +32,17 @@ export default function LandingPage() {
 
       {/* --- Navigation --- */}
       <nav className="relative z-50 border-b border-[var(--border-subtle)] bg-[var(--bg-void)]/80 backdrop-blur-md">
-        <div className="container h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="container h-20 flex items-center justify-between gap-8">
+          <div className="flex items-center gap-3 min-w-fit">
             <div className="w-10 h-10 bg-[var(--accent-dim)] border border-[var(--accent-border)] rounded-[var(--radius-md)] flex items-center justify-center">
               <Terminal size={20} className="text-[var(--accent-primary)]" />
             </div>
-            <span className="text-xl font-bold tracking-tight">
+            <span className="text-xl font-bold tracking-tight whitespace-nowrap">
               SPIDER<span className="text-[var(--accent-primary)]">FROG</span>
             </span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-8 flex-1 justify-center">
             <Link href="/tools" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm font-medium transition-colors">
               Tools API
             </Link>
@@ -54,7 +54,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-fit">
             <Link href="/dashboard">
               <button className="btn btn-primary btn-sm">
                 <LayoutDashboard size={16} />
@@ -241,15 +241,17 @@ export default function LandingPage() {
           <div className="flex gap-16 text-sm">
             <div className="flex flex-col gap-4">
               <h4 className="font-bold text-[var(--text-primary)]">Platform</h4>
-              <Link href="#" className="text-[var(--text-secondary)] hover:text-white transition-colors">Crawler</Link>
-              <Link href="#" className="text-[var(--text-secondary)] hover:text-white transition-colors">API</Link>
-              <Link href="#" className="text-[var(--text-secondary)] hover:text-white transition-colors">Integrations</Link>
+              <Link href="/features" className="text-[var(--text-secondary)] hover:text-white transition-colors">Features</Link>
+              <Link href="/pricing" className="text-[var(--text-secondary)] hover:text-white transition-colors">Pricing</Link>
+              <Link href="/integrations" className="text-[var(--text-secondary)] hover:text-white transition-colors">Integrations</Link>
             </div>
             <div className="flex flex-col gap-4">
               <h4 className="font-bold text-[var(--text-primary)]">Resources</h4>
-              <Link href="#" className="text-[var(--text-secondary)] hover:text-white transition-colors">Documentation</Link>
-              <Link href="#" className="text-[var(--text-secondary)] hover:text-white transition-colors">Status</Link>
-              <Link href="#" className="text-[var(--text-secondary)] hover:text-white transition-colors">Changelog</Link>
+              <Link href="/docs" className="text-[var(--text-secondary)] hover:text-white transition-colors">Documentation</Link>
+              <Link href="/status" className="text-[var(--text-secondary)] hover:text-white transition-colors">Status</Link>
+              <Link href="/changelog" className="text-[var(--text-secondary)] hover:text-white transition-colors">Changelog</Link>
+              <Link href="/community" className="text-[var(--text-secondary)] hover:text-white transition-colors">Community</Link>
+              <Link href="/api-docs" className="text-[var(--text-secondary)] hover:text-white transition-colors">API</Link>
             </div>
           </div>
         </div>
