@@ -14,8 +14,10 @@ import {
     ArrowLeft,
     Globe,
     Code,
-    ShoppingBag
+    ShoppingBag,
+    Download
 } from 'lucide-react';
+import { exportIssuesCSV } from '@/lib/exportUtils';
 
 export default function Audit() {
     const { pages } = useCrawlerStore();
@@ -59,6 +61,13 @@ export default function Audit() {
                                 <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0 }}>SEO Diagnostics</h1>
                                 <p style={{ color: '#94a3b8', marginTop: '4px' }}>Critical issues and performance optimization guide.</p>
                             </div>
+                            <button
+                                onClick={() => exportIssuesCSV(pageList)}
+                                className="glow-btn"
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '14px' }}
+                            >
+                                <Download size={16} /> Export Issues Report
+                            </button>
                         </div>
 
                         <div className="dashboard-grid">
@@ -98,12 +107,32 @@ export default function Audit() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                     >
-                        <button
-                            onClick={() => setSelectedIssue(null)}
-                            style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, marginBottom: '24px' }}
-                        >
-                            <ArrowLeft size={18} /> BACK TO ALL ISSUES
-                        </button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                            <button
+                                onClick={() => setSelectedIssue(null)}
+                                style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}
+                            >
+                                <ArrowLeft size={18} /> BACK TO ALL ISSUES
+                            </button>
+                            <button
+                                onClick={() => exportIssuesCSV(affectedUrls, selectedIssue)}
+                                style={{
+                                    background: 'rgba(59, 130, 246, 0.1)',
+                                    color: '#3b82f6',
+                                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontWeight: 600,
+                                    fontSize: '13px'
+                                }}
+                            >
+                                <Download size={14} /> Export This Issue
+                            </button>
+                        </div>
 
                         <div className="dashboard-grid" style={{ gridTemplateColumns: '1.5fr 1fr' }}>
                             <div className="glass-panel" style={{ padding: '32px' }}>

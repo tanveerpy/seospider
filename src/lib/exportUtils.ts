@@ -115,3 +115,62 @@ export function exportToCSV(pages: Record<string, PageData>) {
     link.click();
     document.body.removeChild(link);
 }
+
+export function exportIssuesCSV(pages: PageData[], issueType: string | null = null) {
+    if (pages.length === 0) return;
+
+    // Define CSV Headers
+    const headers = [
+        'Issue Type',
+        'Priority',
+        'URL',
+        'Status Code',
+        'Title',
+        'Details' // Specific detail about why it failed if available, otherwise generic
+    ];
+
+    // Helper to determine priority (duplicated logic from UI, ideally shared constant)
+    const getPriority = (issue: string) => {
+        if (issue.includes('Missing') || issue.includes('Error') || issue.includes('Duplicate')) return 'High';
+        if (issue.includes('Low') || issue.includes('Thin')) return 'Medium';
+        return 'Low';
+    };
+
+    const rows: string[] = [];
+
+    pages.forEach(p => {
+        // Filter issues if a specific type is requested
+        const relevantIssues = issueType
+            ? p.issues.filter(i => i === issueType)
+            : p.issues;
+
+        relevantIssues.forEach(issue => {
+            const row = [
+                `"${issue}"`,
+                `"${getPriority(issue)}"`,
+                `"${p.url}"`,
+                p.status,
+                `"${(p.details?.title || '').replace(/"/g, '""')}"`,
+                // Start of details logic - could be expanded
+                `"${issue}"`
+            ];
+            rows.push(row.join(','));
+        });
+    });
+
+    if (rows.length === 0) return;
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const filename = issueType
+        ? `issue_report_${issueType.replace(/\s+/g, '_').toLowerCase()}.csv`
+        : `full_issues_report_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
