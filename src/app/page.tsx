@@ -342,8 +342,30 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-        <div style={{ maxWidth: '1200px', margin: '60px auto 0 auto', paddingTop: '32px', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-          &copy; 2026 SpiderFrog Online. All rights reserved.
+        <div style={{ maxWidth: '1200px', margin: '60px auto 0 auto', paddingTop: '32px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <span style={{ color: '#94a3b8' }}>Built by <strong style={{ color: '#fff' }}>Tanveer</strong></span>
+            <a href="mailto:dahajsainak@gmail.com" style={{
+              padding: '8px 16px',
+              background: 'rgba(34, 197, 94, 0.1)',
+              color: '#4ade80',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '13px',
+              border: '1px solid rgba(34, 197, 94, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              Contact Me
+            </a>
+          </div>
+
+          <div style={{ fontSize: '13px', opacity: 0.6 }}>
+            &copy; 2026 SpiderFrog Online. All rights reserved.
+          </div>
         </div>
       </footer>
     </div>
