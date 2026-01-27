@@ -43,13 +43,13 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden lg:flex items-center gap-8 flex-1 justify-center">
-            <Link href="/tools" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm font-medium transition-colors">
+            <Link href="/tools" className="text-slate-400 hover:text-slate-50 text-sm font-medium transition-colors">
               Tools API
             </Link>
-            <Link href="/docs" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm font-medium transition-colors">
+            <Link href="/docs" className="text-slate-400 hover:text-slate-50 text-sm font-medium transition-colors">
               Documentation
             </Link>
-            <Link href="/pricing" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm font-medium transition-colors">
+            <Link href="/pricing" className="text-slate-400 hover:text-slate-50 text-sm font-medium transition-colors">
               Pricing
             </Link>
           </div>
@@ -240,18 +240,18 @@ export default function LandingPage() {
 
           <div className="flex gap-16 text-sm">
             <div className="flex flex-col gap-4">
-              <h4 className="font-bold text-[var(--text-primary)]">Platform</h4>
-              <Link href="/features" className="text-[var(--text-secondary)] hover:text-white transition-colors">Features</Link>
-              <Link href="/pricing" className="text-[var(--text-secondary)] hover:text-white transition-colors">Pricing</Link>
-              <Link href="/integrations" className="text-[var(--text-secondary)] hover:text-white transition-colors">Integrations</Link>
+              <h4 className="font-bold text-slate-50">Platform</h4>
+              <Link href="/features" className="text-slate-400 hover:text-white transition-colors">Features</Link>
+              <Link href="/pricing" className="text-slate-400 hover:text-white transition-colors">Pricing</Link>
+              <Link href="/integrations" className="text-slate-400 hover:text-white transition-colors">Integrations</Link>
             </div>
             <div className="flex flex-col gap-4">
-              <h4 className="font-bold text-[var(--text-primary)]">Resources</h4>
-              <Link href="/docs" className="text-[var(--text-secondary)] hover:text-white transition-colors">Documentation</Link>
-              <Link href="/status" className="text-[var(--text-secondary)] hover:text-white transition-colors">Status</Link>
-              <Link href="/changelog" className="text-[var(--text-secondary)] hover:text-white transition-colors">Changelog</Link>
-              <Link href="/community" className="text-[var(--text-secondary)] hover:text-white transition-colors">Community</Link>
-              <Link href="/api-docs" className="text-[var(--text-secondary)] hover:text-white transition-colors">API</Link>
+              <h4 className="font-bold text-slate-50">Resources</h4>
+              <Link href="/docs" className="text-slate-400 hover:text-white transition-colors">Documentation</Link>
+              <Link href="/status" className="text-slate-400 hover:text-white transition-colors">Status</Link>
+              <Link href="/changelog" className="text-slate-400 hover:text-white transition-colors">Changelog</Link>
+              <Link href="/community" className="text-slate-400 hover:text-white transition-colors">Community</Link>
+              <Link href="/api-docs" className="text-slate-400 hover:text-white transition-colors">API</Link>
             </div>
           </div>
         </div>
