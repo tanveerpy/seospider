@@ -82,7 +82,7 @@ export default function LandingPage() {
             System v2.0 Online
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
+          <h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-8 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
             SEO Audits.<br />
             <span className="text-[var(--accent-primary)] font-mono tracking-tight">Executed.</span>
           </h1>
