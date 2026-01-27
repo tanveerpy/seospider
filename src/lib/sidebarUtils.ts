@@ -38,14 +38,22 @@ export const buildStructureTree = (pages: PageData[]) => {
         } catch { }
     });
 
-    // Convert to array format for rendering
-    const traverse = (node: any): any => {
+    // Convert to array format for rendering with filter function
+    const traverse = (node: any, currentPath: string): any => {
+        const fullPath = currentPath + (node.label === 'Root' ? '' : (currentPath.endsWith('/') ? '' : '/') + node.label);
         return {
             label: node.label,
             count: node.count,
-            children: Object.values(node.children).map(traverse)
+            filter: (p: PageData) => {
+                try {
+                    const urlPath = new URL(p.url).pathname;
+                    return urlPath.startsWith(fullPath) || (fullPath === '/' && urlPath === '/');
+                } catch { return false; }
+            },
+            children: Object.values(node.children).map(child => traverse(child, fullPath))
         };
     };
 
-    return traverse(root).children; // Return children of root to avoid single top node
+    const tree = traverse(root, '');
+    return tree.children; // Return children of root
 };

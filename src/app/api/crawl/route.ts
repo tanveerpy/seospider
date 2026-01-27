@@ -127,24 +127,99 @@ export async function POST(request: Request) {
                 });
             }
 
-            // --- Issue Detection ---
-            if (!pageData.details.title) pageData.issues.push('Missing Title');
-            if (pageData.details.title.length > 60) pageData.issues.push('Title Too Long');
-            if (pageData.details.title.length < 30 && pageData.details.title.length > 0) pageData.issues.push('Title Too Short');
+            // --- Comprehensive Issue Detection ---
+            // Response Codes
+            if (response.status >= 400) pageData.issues.push(`Response Codes: Internal Client Error (${response.status})`);
+            if (response.status >= 300 && response.status < 400) pageData.issues.push('Response Codes: Redirect');
 
-            if (!pageData.details.description) pageData.issues.push('Missing Meta Description');
-            if (pageData.details.description.length > 155) pageData.issues.push('Meta Description Too Long');
+            // Page Titles
+            if (!pageData.details.title) pageData.issues.push('Page Titles: Missing');
+            else {
+                if (pageData.details.title.length > 60) pageData.issues.push('Page Titles: Over 60 Characters');
+                if (pageData.details.title.length < 30) pageData.issues.push('Page Titles: Under 30 Characters');
+            }
 
-            if (!pageData.details.h1) pageData.issues.push('Missing H1');
-            if ($('h1').length > 1) pageData.issues.push('Multiple H1s');
-            if (pageData.details.h1 === pageData.details.title) pageData.issues.push('Dup H1 & Title');
+            // Meta Descriptions
+            if (!pageData.details.description) pageData.issues.push('Meta Description: Missing');
+            else {
+                if (pageData.details.description.length > 155) pageData.issues.push('Meta Description: Over 155 Characters');
+                if (pageData.details.description.length < 70) pageData.issues.push('Meta Description: Under 70 Characters');
+            }
 
-            if (pageData.details.wordCount < 200) pageData.issues.push('Low Content Word Count');
+            // H1
+            if (!pageData.details.h1) pageData.issues.push('H1: Missing');
+            if ($('h1').length > 1) pageData.issues.push('H1: Multiple');
+            if (pageData.details.h1 && pageData.details.h1 === pageData.details.title) pageData.issues.push('H1: Duplicate of Page Title');
 
-            if (response.status >= 400) pageData.issues.push(`Status ${response.status}`);
-            if (pageData.details.canonical && pageData.details.canonical !== url) pageData.issues.push('Canonicalized');
+            // H2
+            if (pageData.details.h2.length === 0) pageData.issues.push('H2: Missing');
+            if (pageData.details.h2.length > 20) pageData.issues.push('H2: Multiple (High Count)');
 
-            // --- Link Extraction ---
+            // Canonicals
+            if (!pageData.details.canonical) pageData.issues.push('Canonicals: Missing');
+            if (pageData.details.canonical && pageData.details.canonical !== url) pageData.issues.push('Canonicals: Non-Self-Referential');
+
+            // Content
+            if (pageData.details.wordCount < 300) pageData.issues.push('Content: Thin Content (< 300 words)');
+            if (pageData.details.h2.length > 0 && !pageData.details.h1) pageData.issues.push('Headings: H2 with Missing H1');
+
+            // --- Images ---
+            $('img').each((_, el) => {
+                const src = $(el).attr('src');
+                const alt = $(el).attr('alt');
+                const width = $(el).attr('width');
+                const height = $(el).attr('height');
+
+                if (src) {
+                    try {
+                        const abs = new URL(src, url).href;
+                        pageData.assets.push({ url: abs, type: 'image', alt: alt || '' });
+                    } catch { }
+
+                    if (!alt) pageData.issues.push('Images: Missing Alt Text');
+                    if (!width || !height) pageData.issues.push('Images: Missing Size Attributes');
+                }
+            });
+
+            // Security Headers
+            const headers = response.headers;
+            if (!headers['strict-transport-security']) pageData.issues.push('Security: Missing HSTS Header');
+            if (!headers['x-frame-options']) pageData.issues.push('Security: Missing X-Frame-Options Header');
+            if (!headers['x-content-type-options']) pageData.issues.push('Security: Missing X-Content-Type-Options Header');
+            if (!headers['referrer-policy']) pageData.issues.push('Security: Missing Secure Referrer-Policy Header');
+            if (!headers['content-security-policy']) pageData.issues.push('Security: Missing Content-Security-Policy Header');
+
+            // --- 2026 SEO Signals ---
+            // Schema / Structured Data
+            if (pageData.details.structuredData.length === 0) {
+                pageData.issues.push('Schema: Missing Structured Data');
+            }
+
+            // A11y & Internationalization
+            const htmlLang = $('html').attr('lang');
+            if (!htmlLang) pageData.issues.push('Accessibility: Missing HTML Lang Attribute');
+
+            // --- Other Assets ---
+            $('link[rel="stylesheet"]').each((_, el) => {
+                const href = $(el).attr('href');
+                if (href) {
+                    try {
+                        const abs = new URL(href, url).href;
+                        pageData.assets.push({ url: abs, type: 'css' });
+                    } catch { }
+                }
+            });
+            $('script[src]').each((_, el) => {
+                const src = $(el).attr('src');
+                if (src) {
+                    try {
+                        const abs = new URL(src, url).href;
+                        pageData.assets.push({ url: abs, type: 'javascript' });
+                    } catch { }
+                }
+            });
+
+            // --- Internal Link Extraction ---
             $('a').each((_, el) => {
                 const href = $(el).attr('href');
                 if (href) {
@@ -160,24 +235,6 @@ export async function POST(request: Request) {
                     } catch { }
                 }
             });
-
-            // --- Asset Extraction ---
-            const addAsset = (src: string | undefined, type: string, extra?: any) => {
-                if (src) {
-                    try {
-                        const abs = new URL(src, url).href;
-                        pageData.assets.push({ url: abs, type, ...extra });
-                    } catch { }
-                }
-            };
-
-            $('img').each((_, el) => {
-                addAsset($(el).attr('src'), 'image', { alt: $(el).attr('alt') || '' });
-                if (!$(el).attr('alt')) pageData.issues.push('Missing Alt Text');
-                if ($(el).attr('src') && $(el).attr('src')!.length > 1000) pageData.issues.push('Long Image URL');
-            });
-            $('link[rel="stylesheet"]').each((_, el) => addAsset($(el).attr('href'), 'css'));
-            $('script[src]').each((_, el) => addAsset($(el).attr('src'), 'javascript'));
         }
 
         return NextResponse.json(pageData);

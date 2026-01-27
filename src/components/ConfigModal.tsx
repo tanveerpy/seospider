@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useCrawlerStore } from '@/lib/store';
 import { v4 as uuidv4 } from 'uuid';
+import { X, Plus, Trash2 } from 'lucide-react';
+import clsx from 'clsx';
 
 export default function ConfigModal({ onClose }: { onClose: () => void }) {
     const { extractionRules, addRule, removeRule } = useCrawlerStore();
@@ -18,61 +20,114 @@ export default function ConfigModal({ onClose }: { onClose: () => void }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-[500px] shadow-2xl border border-gray-300">
-                <h2 className="text-lg font-bold mb-4 text-gray-800">Crawl Configuration</h2>
+        <div className="sf-modal-overlay animate-in">
+            <div className="sf-modal-content glass-panel" style={{ width: '600px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="flex-between" style={{ marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>Configuration</h2>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                        <X size={24} />
+                    </button>
+                </div>
 
-                <div className="mb-6">
-                    <h3 className="text-sm font-semibold uppercase text-gray-500 mb-2">Custom Extraction</h3>
-                    <div className="flex gap-2 mb-2">
+                <div style={{ marginBottom: '32px' }}>
+                    <h3 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', marginBottom: '16px', letterSpacing: '1px' }}>
+                        Custom Data Extraction
+                    </h3>
+
+                    {/* Input Group */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: '8px', marginBottom: '8px' }}>
                         <input
-                            className="flex-1 border p-2 text-sm rounded"
-                            placeholder="Extraction Name (e.g. Price)"
+                            className="sf-input"
+                            style={{
+                                padding: '10px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '8px', color: '#fff', fontSize: '13px', outline: 'none'
+                            }}
+                            placeholder="Field Name (e.g. Price, Author)"
                             value={name} onChange={e => setName(e.target.value)}
                         />
-                        <select
-                            className="border p-2 text-sm rounded bg-gray-50"
-                            value={type} onChange={e => setType(e.target.value as any)}
-                        >
-                            <option value="css">CSS Path</option>
-                            <option value="regex">Regex</option>
-                        </select>
+                        <div style={{ position: 'relative' }}>
+                            <select
+                                style={{
+                                    width: '100%', padding: '10px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '8px', color: '#fff', fontSize: '13px', outline: 'none', appearance: 'none', cursor: 'pointer'
+                                }}
+                                value={type} onChange={e => setType(e.target.value as any)}
+                            >
+                                <option value="css">CSS Selector</option>
+                                <option value="regex">Regex Pattern</option>
+                            </select>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
                         <input
-                            className="flex-1 border p-2 text-sm rounded font-mono text-xs"
+                            className="sf-input"
+                            style={{
+                                flex: 1, padding: '10px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '8px', color: '#fff', fontFamily: 'monospace', fontSize: '12px', outline: 'none'
+                            }}
                             placeholder={type === 'css' ? '.product-price' : '/price:\\s*(\\$[0-9]+)/'}
                             value={value} onChange={e => setValue(e.target.value)}
                         />
                         <button
                             onClick={handleAdd}
-                            className="bg-green-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-green-600"
+                            className="glow-btn"
+                            style={{ padding: '0 20px', borderRadius: '8px' }}
                         >
-                            ADD
+                            <Plus size={16} /> Add
                         </button>
                     </div>
                 </div>
 
-                <div className="bg-gray-50 border rounded h-40 overflow-auto p-2 mb-4">
-                    {extractionRules.length === 0 && <div className="text-gray-400 text-sm text-center mt-10">No rules added.</div>}
+                {/* Rules List */}
+                <div style={{
+                    background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px',
+                    height: '240px', overflowY: 'auto', padding: '12px'
+                }}>
+                    {extractionRules.length === 0 && (
+                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#475569' }}>
+                            <div style={{ fontSize: '13px' }}>No active rules</div>
+                            <div style={{ fontSize: '11px', marginTop: '4px' }}>Add a rule to scrape custom data</div>
+                        </div>
+                    )}
                     {extractionRules.map(rule => (
-                        <div key={rule.id} className="flex justify-between items-center bg-white p-2 mb-1 border rounded shadow-sm text-sm">
-                            <div>
-                                <span className="font-bold text-gray-700 mr-2">{rule.name}</span>
-                                <span className="text-xs bg-gray-200 px-1 rounded mr-2">{rule.type}</span>
-                                <span className="font-mono text-gray-500 text-xs">{rule.value}</span>
+                        <div key={rule.id} style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            background: 'rgba(255,255,255,0.03)', padding: '10px', marginBottom: '8px',
+                            borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', gap: '12px' }}>
+                                <span style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '13px' }}>{rule.name}</span>
+                                <span style={{
+                                    fontSize: '10px', background: rule.type === 'css' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                                    color: rule.type === 'css' ? '#4ade80' : '#60a5fa',
+                                    padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700
+                                }}>
+                                    {rule.type}
+                                </span>
+                                <span style={{ fontFamily: 'monospace', color: '#94a3b8', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
+                                    {rule.value}
+                                </span>
                             </div>
-                            <button onClick={() => removeRule(rule.id)} className="text-red-500 hover:text-red-700 font-bold">×</button>
+                            <button
+                                onClick={() => removeRule(rule.id)}
+                                style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                            >
+                                <Trash2 size={14} />
+                            </button>
                         </div>
                     ))}
                 </div>
 
-                <div className="flex justify-end">
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
                     <button
                         onClick={onClose}
-                        className="bg-gray-800 text-white px-6 py-2 rounded font-bold hover:bg-black"
+                        style={{
+                            background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)',
+                            padding: '10px 24px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '13px'
+                        }}
                     >
-                        Done
+                        Save & Close
                     </button>
                 </div>
             </div>

@@ -2,50 +2,74 @@
 
 import dynamic from 'next/dynamic';
 import { useCrawlerStore } from '@/lib/store';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 
-// Dynamically import to avoid SSR issues with Canvas
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 export default function LinkGraph() {
     const { pages } = useCrawlerStore();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        const updateSize = () => {
+            if (containerRef.current) {
+                setDimensions({
+                    width: containerRef.current.clientWidth,
+                    height: containerRef.current.clientHeight
+                });
+            }
+        };
+
+        // Initial measurement
+        updateSize();
+
+        // Resize with debounce
+        const observer = new ResizeObserver((entries) => {
+            requestAnimationFrame(() => updateSize());
+        });
+
+        if (containerRef.current) observer.observe(containerRef.current);
+
+        return () => observer.disconnect();
+    }, []);
 
     const data = useMemo(() => {
         const nodes: any[] = [];
         const links: any[] = [];
-
         const pageList = Object.values(pages);
 
         if (pageList.length === 0) return { nodes: [], links: [] };
 
-        // Create Nodes
+        // 1. Create Nodes
         pageList.forEach(p => {
-            let color = '#4ade80'; // Green (200)
-            if (p.status >= 300) color = '#fbbf24'; // Orange (300)
-            if (p.status >= 400) color = '#f87171'; // Red (400)
+            let color = '#22c55e'; // 200 OK (Green)
+            if (p.status >= 300 && p.status < 400) color = '#3b82f6'; // 3xx (Blue)
+            if (p.status >= 400 && p.status < 500) color = '#f59e0b'; // 4xx (Orange)
+            if (p.status >= 500) color = '#ef4444'; // 5xx (Red)
 
-            let val = 1;
-            // Size by "Inlinks" (internal authority approximation)
-            const inlinks = pageList.filter(other => other.links.some(l => l.url === p.url)).length;
-            val = 1 + (inlinks * 0.5);
+            // Centrality / Size Calculation based on inlinks
+            const inlinks = pageList.filter(other => other.links?.some(l => l.url === p.url)).length;
+            const size = Math.min(10, 3 + Math.sqrt(inlinks));
 
             nodes.push({
                 id: p.url,
-                name: p.url,
+                name: p.url, // Tooltip text
                 color,
-                val
+                val: size
             });
         });
 
-        // Create Links
+        // 2. Create Links
         pageList.forEach(source => {
-            source.links.forEach(targetLink => {
-                // Only draw link if target exists in our graph (Internal)
+            source.links?.forEach(targetLink => {
+                // Only create links if target exists in our graph (internal)
                 if (pages[targetLink.url]) {
                     links.push({
                         source: source.url,
-                        target: targetLink.url,
-                        color: '#cccccc'
+                        target: targetLink.url
                     });
                 }
             });
@@ -54,36 +78,45 @@ export default function LinkGraph() {
         return { nodes, links };
     }, [pages]);
 
+    if (!mounted) return null;
+
     return (
-        <div className="w-full h-full bg-[#f0f0f0] relative overflow-hidden">
+        <div ref={containerRef} style={{ width: '100%', height: '100%', background: '#020617', position: 'relative' }}>
             {data.nodes.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                    Start a crawl to see the graph
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b' }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ marginBottom: '16px' }}>🕸️</div>
+                        <div>Awaiting crawler data...</div>
+                    </div>
                 </div>
             ) : (
                 <ForceGraph2D
                     graphData={data}
-                    backgroundColor="#f0f0f0"
+                    width={dimensions.width}
+                    height={dimensions.height}
+                    backgroundColor="#020617"
+
+                    // Nodes
                     nodeLabel="name"
                     nodeColor="color"
-                    linkColor={() => '#ccc'}
-                    nodeRelSize={6}
-                    linkDirectionalArrowLength={3.5}
-                    linkDirectionalArrowRelPos={1}
+                    nodeRelSize={4}
+
+                    // Links
+                    linkColor={() => 'rgba(255, 255, 255, 0.1)'}
+                    linkWidth={1}
+                    linkDirectionalParticles={2}
+                    linkDirectionalParticleSpeed={0.005}
+                    linkDirectionalParticleWidth={1.5}
+                    linkDirectionalParticleColor={() => '#22c55e'}
+
+                    // Physics
+                    d3AlphaDecay={0.02}
+                    d3VelocityDecay={0.3}
                     cooldownTicks={100}
-                    onNodeClick={(node: any) => {
-                        // Optional: Select node in main store
-                        window.alert(`Clicked: ${node.id}`);
-                    }}
+
+                    onNodeClick={(node: any) => window.open(node.id, '_blank')}
                 />
             )}
-
-            <div className="absolute top-4 right-4 bg-white/90 p-2 rounded shadow text-xs border border-gray-300">
-                <div className="font-bold mb-1">Legend</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-green-400"></span> 200 OK</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-yellow-400"></span> 3xx Redirect</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-400"></span> 4xx Error</div>
-            </div>
         </div>
     );
 }

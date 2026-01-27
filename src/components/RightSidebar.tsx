@@ -1,20 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useCrawlerStore, PageData } from '@/lib/store';
 import clsx from 'clsx';
 import { getResponseTimeBuckets, buildStructureTree } from '@/lib/sidebarUtils';
+import { ISSUE_METADATA } from '@/lib/issueMetadata';
 
 interface SidebarProps {
     activeTab: string;
     setActiveTab: (tab: any) => void;
-    setFilter: (filter: (p: PageData) => boolean) => void;
+    setFilter: React.Dispatch<React.SetStateAction<((p: PageData) => boolean) | null>>;
 }
 
 export default function RightSidebar({ activeTab: parentTab, setActiveTab: setParentTab, setFilter }: SidebarProps) {
     const { pages, queue } = useCrawlerStore();
     const [sidebarTab, setSidebarTab] = useState<'Overview' | 'Issues' | 'Site Structure' | 'Response Times' | 'API'>('Overview');
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+    const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
 
     const pageList = Object.values(pages);
     const totalURLs = pageList.length + queue.length;
@@ -32,16 +34,20 @@ export default function RightSidebar({ activeTab: parentTab, setActiveTab: setPa
     // --- Tree Renderers ---
     const TreeItem = ({ label, count, indent = 0, onClick, hasChildren, isExpanded }: any) => (
         <div
-            className="flex items-center hover:bg-gray-100 cursor-pointer text-xs py-1 border-b border-gray-50 select-none group h-7"
-            style={{ paddingLeft: `${indent * 12 + 8}px` }}
+            className="tree-node"
+            style={{ paddingLeft: `${indent * 12 + 8}px`, height: '28px', alignItems: 'center', borderBottom: '1px solid #f5f5f5' }}
             onClick={onClick}
         >
-            <span className="mr-1 text-gray-400 font-mono w-4 text-center inline-block shrink-0">
-                {hasChildren ? (isExpanded ? '▼' : '▶') : ''}
-            </span>
-            <span className="flex-1 truncate text-gray-700 font-medium group-hover:text-black">{label}</span>
-            <span className="text-gray-600 mr-2 text-[10px] w-12 text-right shrink-0">{count.toLocaleString()}</span>
-            <span className="text-gray-400 w-12 text-right mr-2 text-[10px] shrink-0">{pct(count)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', flex: 1, overflow: 'hidden' }}>
+                <span style={{ width: '16px', color: '#999', flexShrink: 0, textAlign: 'center', fontFamily: 'monospace' }}>
+                    {hasChildren ? (isExpanded ? '▼' : '▶') : ''}
+                </span>
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>{label}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span className="tree-count">{count.toLocaleString()}</span>
+                <span style={{ color: '#999', fontSize: '10px', width: '35px', textAlign: 'right', marginLeft: '4px' }}>{pct(count)}</span>
+            </div>
         </div>
     );
 
@@ -54,7 +60,10 @@ export default function RightSidebar({ activeTab: parentTab, setActiveTab: setPa
                     indent={depth}
                     hasChildren={node.children && node.children.length > 0}
                     isExpanded={expandedNodes.has(node.label)}
-                    onClick={() => toggleNode(node.label)}
+                    onClick={() => {
+                        toggleNode(node.label);
+                        if (node.filter) setFilter(() => node.filter);
+                    }}
                 />
                 {expandedNodes.has(node.label) && node.children && renderStructure(node.children, depth + 1)}
             </div>
@@ -62,15 +71,15 @@ export default function RightSidebar({ activeTab: parentTab, setActiveTab: setPa
     };
 
     return (
-        <div className="sf-right-sidebar flex flex-col h-full border-l border-gray-300 bg-white w-[350px] min-w-[320px] max-w-[450px] shadow-lg relative z-20">
+        <div className="sf-right-sidebar">
             {/* Sidebar Tabs */}
-            <div className="flex bg-gray-100 border-b border-gray-300 overflow-x-auto text-[11px] shrink-0 no-scrollbar h-9 items-center">
+            <div className="sf-tabs-bar" style={{ height: '40px', overflowX: 'auto', flexShrink: 0 }}>
                 {['Overview', 'Issues', 'Site Structure', 'Response Times', 'API'].map(tab => (
                     <div
                         key={tab}
                         className={clsx(
-                            "px-3 h-full flex items-center cursor-pointer whitespace-nowrap hover:bg-gray-200 border-r border-gray-200 transition-colors",
-                            sidebarTab === tab ? "bg-white text-gray-900 font-bold border-t-2 border-green-500" : "text-gray-600"
+                            "sf-tab",
+                            sidebarTab === tab && "active"
                         )}
                         onClick={() => setSidebarTab(tab as any)}
                     >
@@ -80,16 +89,16 @@ export default function RightSidebar({ activeTab: parentTab, setActiveTab: setPa
             </div>
 
             {/* Sidebar Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
+            <div className="sf-sidebar-scroll">
                 {sidebarTab === 'Overview' && (
-                    <div className="flex flex-col pb-4">
-                        <div className="font-bold bg-gray-50 px-3 py-2 text-[10px] text-gray-500 uppercase border-y tracking-wider sticky top-0 z-10">Summary</div>
+                    <div className="sf-flex-col" style={{ paddingBottom: '16px' }}>
+                        <div className="tree-header sticky top-0">Summary</div>
                         <TreeItem label="Total URLs Encountered" count={totalURLs} />
                         <TreeItem label="Total URLs Crawled" count={pageList.length} />
                         <TreeItem label="Total Internal URLs" count={pageList.filter(p => !p.links.some(l => l.type === 'external')).length} />
                         <TreeItem label="Total External URLs" count={pageList.filter(p => p.links.some(l => l.type === 'external')).length} />
 
-                        <div className="font-bold bg-gray-50 px-3 py-2 text-[10px] text-gray-500 uppercase border-y mt-2 tracking-wider sticky top-0 z-10">Crawl Data</div>
+                        <div className="tree-header sticky top-0" style={{ marginTop: '8px' }}>Crawl Data</div>
                         <TreeItem label="HTML" count={pageList.filter(p => p.contentType.includes('html')).length} />
                         <TreeItem label="JavaScript" count={pageList.filter(p => p.contentType.includes('javascript')).length} />
                         <TreeItem label="CSS" count={pageList.filter(p => p.contentType.includes('css')).length} />
@@ -97,7 +106,7 @@ export default function RightSidebar({ activeTab: parentTab, setActiveTab: setPa
                         <TreeItem label="PDF" count={pageList.filter(p => p.contentType.includes('pdf')).length} />
                         <TreeItem label="Other" count={pageList.filter(p => !['html', 'javascript', 'css', 'image', 'pdf'].some(t => p.contentType.includes(t))).length} />
 
-                        <div className="font-bold bg-gray-50 px-3 py-2 text-[10px] text-gray-500 uppercase border-y mt-2 tracking-wider sticky top-0 z-10">Response Codes</div>
+                        <div className="tree-header sticky top-0" style={{ marginTop: '8px' }}>Response Codes</div>
                         <TreeItem label="Success (2xx)" count={pageList.filter(p => p.status >= 200 && p.status < 300).length} />
                         <TreeItem label="Redirection (3xx)" count={pageList.filter(p => p.status >= 300 && p.status < 400).length} />
                         <TreeItem label="Client Error (4xx)" count={pageList.filter(p => p.status >= 400 && p.status < 500).length} />
@@ -106,29 +115,75 @@ export default function RightSidebar({ activeTab: parentTab, setActiveTab: setPa
                 )}
 
                 {sidebarTab === 'Issues' && (
-                    <div className="flex flex-col pb-4">
-                        <div className="font-bold bg-red-50 px-3 py-2 text-[10px] text-red-600 uppercase border-y tracking-wider">Detected Issues</div>
-                        {Array.from(new Set(pageList.flatMap(p => p.issues))).map(issue => (
-                            <TreeItem
-                                key={issue}
-                                label={issue}
-                                count={pageList.filter(p => p.issues.includes(issue)).length}
-                                onClick={() => setFilter((p) => p.issues.includes(issue))}
-                            />
-                        ))}
-                        {pageList.flatMap(p => p.issues).length === 0 && <div className="p-4 text-gray-400 text-center text-xs">No issues found.</div>}
+                    <div className="sf-flex-col" style={{ paddingBottom: '16px' }}>
+                        {!selectedIssue ? (
+                            <>
+                                <div className="tree-header" style={{ background: '#fef2f2', color: '#dc2626' }}>Detected Issues</div>
+                                {Array.from(new Set(pageList.flatMap(p => p.issues))).map(issue => (
+                                    <TreeItem
+                                        key={issue}
+                                        label={issue}
+                                        count={pageList.filter(p => p.issues.includes(issue)).length}
+                                        onClick={() => {
+                                            setSelectedIssue(issue);
+                                            setFilter(() => (p: PageData) => p.issues?.includes(issue));
+                                        }}
+                                    />
+                                ))}
+                                {pageList.flatMap(p => p.issues).length === 0 && <div style={{ padding: '16px', color: '#999', textAlign: 'center', fontSize: '12px' }}>No issues found.</div>}
+                            </>
+                        ) : (
+                            <div style={{ padding: '16px' }}>
+                                <button
+                                    onClick={() => {
+                                        setSelectedIssue(null);
+                                        setFilter(null);
+                                    }}
+                                    style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '12px', marginBottom: '12px', padding: 0, fontWeight: 'bold' }}
+                                >
+                                    ← Back to All Issues
+                                </button>
+                                <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px', color: '#d32f2f' }}>{selectedIssue}</div>
+
+                                {ISSUE_METADATA[selectedIssue] ? (
+                                    <div className="issue-details-view">
+                                        <div className={clsx("priority-badge", ISSUE_METADATA[selectedIssue].priority.toLowerCase())}>
+                                            {ISSUE_METADATA[selectedIssue].priority} Priority
+                                        </div>
+
+                                        <div style={{ marginTop: '16px' }}>
+                                            <div style={{ fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', color: '#666' }}>Impact</div>
+                                            <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.4', marginTop: '4px' }}>{ISSUE_METADATA[selectedIssue].impact}</p>
+                                        </div>
+
+                                        <div style={{ marginTop: '16px' }}>
+                                            <div style={{ fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', color: '#666' }}>How to Fix</div>
+                                            <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.4', marginTop: '4px', background: '#f0f9ff', padding: '8px', borderRadius: '4px', borderLeft: '3px solid #0ea5e9' }}>
+                                                {ISSUE_METADATA[selectedIssue].fix}
+                                            </p>
+                                        </div>
+
+                                        <div style={{ marginTop: '24px', fontSize: '12px', color: '#666' }}>
+                                            <b>Affected URLs:</b> {pageList.filter(p => p.issues.includes(selectedIssue)).length}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ fontSize: '13px', color: '#666', fontStyle: 'italic' }}>Detailed information for this issue is coming soon.</div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 
                 {sidebarTab === 'Site Structure' && (
-                    <div className="py-2">
+                    <div style={{ padding: '8px 0' }}>
                         {renderStructure(buildStructureTree(pageList))}
                     </div>
                 )}
 
                 {sidebarTab === 'Response Times' && (
-                    <div className="flex flex-col pb-4">
-                        <div className="font-bold bg-gray-50 px-3 py-2 text-[10px] text-gray-500 uppercase border-y tracking-wider">Response Time Buckets</div>
+                    <div className="sf-flex-col" style={{ paddingBottom: '16px' }}>
+                        <div className="tree-header">Response Time Buckets</div>
                         {getResponseTimeBuckets(pageList).map(b => (
                             <TreeItem key={b.label} label={b.label} count={b.count} />
                         ))}
