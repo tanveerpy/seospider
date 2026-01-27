@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ConfigModal from '@/components/ConfigModal';
+import { crawlPageClientSide } from '@/lib/clientCrawler';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { isCrawling, startCrawl, stopCrawl, pages, queue, popQueue, addPage, addToQueue } = useCrawlerStore();
@@ -38,11 +39,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             if (!nextUrl) break;
             try {
                 const rules = useCrawlerStore.getState().extractionRules;
-                const res = await fetch('/api/crawl', {
-                    method: 'POST',
-                    body: JSON.stringify({ url: nextUrl, rules })
-                });
-                const data: PageData = await res.json();
+                // Switch to client-side crawling for GitHub Pages compatibility
+                const data = await crawlPageClientSide(nextUrl, rules);
+
                 if (data && data.url) {
                     addPage(data);
                     const internalLinks = data.links.filter(l => l.type === 'internal').map(l => l.url);
