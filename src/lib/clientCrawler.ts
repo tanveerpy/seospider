@@ -1,18 +1,55 @@
-
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { PageData } from './store';
 
-// Use a CORS proxy to bypass browser restrictions
-const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+// List of reliable CORS Proxies to try in round-robin or fallback order
+const CORS_PROXIES = [
+    (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`, // Fallbacks
+];
+
+async function fetchWithRetry(url: string, retries = 3): Promise<any> {
+    for (let attempt = 0; attempt < retries; attempt++) {
+        // Try each proxy until one works
+        for (const proxy of CORS_PROXIES) {
+            try {
+                const proxyUrl = proxy(url);
+                const response = await axios.get(proxyUrl, {
+                    timeout: 10000 // 10s timeout to avoid hanging
+                });
+
+                // If success, return response immediately
+                if (response.status >= 200 && response.status < 300) {
+                    return response;
+                }
+            } catch (e) {
+                // Continue to next proxy
+                console.warn(`Proxy failed: ${proxy(url)}`, e);
+            }
+        }
+
+        // If all proxies failed this attempt, wait before retrying (Exponential Backoff)
+        const delay = 1000 * Math.pow(2, attempt);
+        console.log(`All proxies failed for ${url}, retrying in ${delay}ms...`);
+        await new Promise(r => setTimeout(r, delay));
+    }
+    throw new Error('All connection attempts failed after retries.');
+}
 
 export async function crawlPageClientSide(url: string, rules: any = []): Promise<PageData> {
     try {
         const targetUrl = new URL(url);
-        const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
-
         const start = Date.now();
-        const response = await axios.get(proxyUrl);
+
+        let response;
+        try {
+            response = await fetchWithRetry(url);
+        } catch (e) {
+            // Final fallback: just try fetch directly (might work if CORS is open)
+            throw new Error('All Proxies Failed');
+        }
+
         const time = Date.now() - start;
 
         const contentType = response.headers['content-type'] || '';
