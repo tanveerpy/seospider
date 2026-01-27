@@ -13,14 +13,31 @@ export default function HeaderChecker() {
         setLoading(true);
         setResult(null);
         try {
-            const res = await fetch('/api/check-headers', {
-                method: 'POST',
-                body: JSON.stringify({ url })
+            const start = Date.now();
+            // Use CORS proxy for client-side check
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {
+                method: 'GET' // Proxy usually expects GET
             });
-            const data = await res.json();
-            setResult(data);
-        } catch (e) {
+            const time = Date.now() - start;
+
+            // Extract headers (Note: Proxy might add/remove some)
+            const headers: Record<string, string> = {};
+            res.headers.forEach((val, key) => {
+                headers[key] = val;
+            });
+
+            setResult({
+                status: res.status,
+                time,
+                headers
+            });
+        } catch (e: any) {
             console.error(e);
+            setResult({
+                status: 0,
+                time: 0,
+                error: 'Connection Failed (CORS or Network Error)'
+            });
         } finally {
             setLoading(false);
         }
