@@ -72,50 +72,72 @@ export async function crawlPageClientSide(url: string, rules: any = []): Promise
     const targetUrl = new URL(url);
     const start = Date.now();
     let response;
+    let methodUsed = 'DIRECT';
 
-    // 1. Try Client-Side Real Fetch (via CORS Proxies)
+    // ---------------------------------------------------------
+    // STRATEGY 1: DIRECT BROWSER FETCH (Visitor IP)
+    // ---------------------------------------------------------
     try {
-        response = await fetchWithRetry(url);
-    } catch (e) {
-        console.warn(`[SF-CLIENT] Proxy Fetch failed. Attempting Server Fallback.`);
+        // console.log(`[SF-CLIENT] Attempting Direct Fetch (Visitor IP) for: ${url}`);
+        response = await axios.get(url, {
+            timeout: 10000,
+            headers: { 'Accept': 'text/html' } // Simple header to avoid pre-flight option requests sometimes
+        });
 
-        // 2. Try Server Fallback (Localhost / Node Env)
+    } catch (directError: any) {
+        // CORS Errors usually appear as Network Errors in Axios
+        // console.warn(`[SF-CLIENT] Direct Fetch Failed (Likely CORS). Switching to Proxy.`, directError.message);
+
+        // ---------------------------------------------------------
+        // STRATEGY 2: PUBLIC CORS PROXIES
+        // ---------------------------------------------------------
         try {
-            return await crawlViaServer(url, rules);
-        } catch (serverError: any) {
-            // Both Failed. Return "Failed Page" status (Real outcome).
-            console.error(`[SF-CRITICAL] All crawl methods failed for ${url}`);
+            methodUsed = 'PROXY';
+            response = await fetchWithRetry(url);
+        } catch (proxyError) {
+            console.warn(`[SF-CLIENT] All proxies failed. Triggering Server Fallback.`);
 
-            return {
-                url,
-                status: 0, // Connection Failed
-                contentType: 'error',
-                size: 0,
-                time: Date.now() - start,
-                links: [],
-                assets: [],
-                details: {
-                    title: 'Crawl Failed',
-                    description: '',
-                    h1: '',
-                    h2: [],
-                    wordCount: 0,
-                    canonical: '',
-                    metaRobots: '',
-                    xRobotsTag: '',
-                    hreflang: [],
-                    relNext: '',
-                    relPrev: '',
-                    amphtml: '',
-                    structuredData: []
-                },
-                customData: {},
-                issues: [{
-                    type: 'error',
-                    message: 'Crawl Failed: Blocked by CORS/WAF or API Unavailable. Run locally for full power.',
-                    code: 'CRAWL-FAIL'
-                }]
-            };
+            // ---------------------------------------------------------
+            // STRATEGY 3: SERVER-SIDE FALLBACK (Node.js)
+            // ---------------------------------------------------------
+            try {
+                methodUsed = 'SERVER';
+                return await crawlViaServer(url, rules);
+            } catch (serverError: any) {
+                // Both Failed. Return "Failed Page" status (Real outcome).
+                console.error(`[SF-CRITICAL] All crawl methods failed for ${url}`);
+
+                return {
+                    url,
+                    status: 0, // Connection Failed
+                    contentType: 'error',
+                    size: 0,
+                    time: Date.now() - start,
+                    links: [],
+                    assets: [],
+                    details: {
+                        title: 'Crawl Failed',
+                        description: '',
+                        h1: '',
+                        h2: [],
+                        wordCount: 0,
+                        canonical: '',
+                        metaRobots: '',
+                        xRobotsTag: '',
+                        hreflang: [],
+                        relNext: '',
+                        relPrev: '',
+                        amphtml: '',
+                        structuredData: []
+                    },
+                    customData: {},
+                    issues: [{
+                        type: 'error',
+                        message: 'Crawl Failed: Blocked by CORS/WAF or API Unavailable. Run locally for full power.',
+                        code: 'CRAWL-FAIL'
+                    }]
+                };
+            }
         }
     }
 
