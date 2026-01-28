@@ -50,67 +50,147 @@ async function fetchWithRetry(url: string, retries = 3): Promise<any> {
     throw new Error('All connection attempts failed after retries.');
 }
 
-// MOCK CRAWLER FOR STATIC HOSTS (GitHub Pages)
-async function mockCrawl(url: string): Promise<PageData> {
-    console.log(`[SF-DEMO] Entering Demo Mode for: ${url}`);
+// ENFORCED REAL DATA POLICY: No Mock Data.
+// If proxies fail, we return a failure state explaining why.
 
-    // Simulate Network Latency
-    await new Promise(r => setTimeout(r, Math.random() * 1500 + 500));
+async function crawlViaServer(url: string, rules: any = []): Promise<PageData> {
+    // console.log(`[SF-CLIENT] Attempting Server-Side Stealth Crawler for: ${url}`);
+    try {
+        // Respecting basePath: /seospider
+        const response = await axios.post('/seospider/api/crawl', { url, rules });
+        return response.data;
+    } catch (error: any) {
+        // console.error("[SF-CLIENT] Server Fallback Failed:", error);
 
-    const domain = new URL(url).hostname;
-    const path = new URL(url).pathname;
-    const isHome = path === '/' || path === '';
+        // If API is missing (Static Host) or blocked, propagate the error
+        // Do NOT return mock data.
+        throw error;
+    }
+}
 
-    // Deterministic random (simple hash) to make repeated "crawls" of same mock URL consistent-ish
-    const hash = url.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
-    const rand = Math.abs(hash % 100) / 100;
+export async function crawlPageClientSide(url: string, rules: any = []): Promise<PageData> {
+    const targetUrl = new URL(url);
+    const start = Date.now();
+    let response;
 
-    const status = Math.random() > 0.9 ? 404 : 200;
-    const title = isHome ? `Home | ${domain} - SEO Optimized` : `Page ${path} | ${domain}`;
+    // 1. Try Client-Side Real Fetch (via CORS Proxies)
+    try {
+        response = await fetchWithRetry(url);
+    } catch (e) {
+        console.warn(`[SF-CLIENT] Proxy Fetch failed. Attempting Server Fallback.`);
 
-    const mockIssues = [];
-    if (Math.random() > 0.8) mockIssues.push({ type: 'error', message: 'H1: Missing', code: 'H1-MISS' });
-    if (Math.random() > 0.9) mockIssues.push({ type: 'warning', message: 'Images: Missing Alt Text', code: 'IMG-NO-ALT' });
-    if (status === 404) mockIssues.push({ type: 'error', message: 'Response Codes: Client Error (404)', code: 'HTTP-404' });
+        // 2. Try Server Fallback (Localhost / Node Env)
+        try {
+            return await crawlViaServer(url, rules);
+        } catch (serverError: any) {
+            // Both Failed. Return "Failed Page" status (Real outcome).
+            console.error(`[SF-CRITICAL] All crawl methods failed for ${url}`);
 
-    // Generate Mock Links to propagate "crawl"
-    const links = [];
-    const linkCount = Math.floor(Math.random() * 5) + 2;
-    for (let i = 0; i < linkCount; i++) {
-        const subPage = `page-${Math.floor(Math.random() * 1000)}`;
-        links.push({
-            url: `https://${domain}/${subPage}`,
-            type: 'internal' as const
-        });
+            return {
+                url,
+                status: 0, // Connection Failed
+                contentType: 'error',
+                size: 0,
+                time: Date.now() - start,
+                links: [],
+                assets: [],
+                details: {
+                    title: 'Crawl Failed',
+                    description: '',
+                    h1: '',
+                    h2: [],
+                    wordCount: 0,
+                    canonical: '',
+                    metaRobots: '',
+                    xRobotsTag: '',
+                    hreflang: [],
+                    relNext: '',
+                    relPrev: '',
+                    amphtml: '',
+                    structuredData: []
+                },
+                customData: {},
+                issues: [{
+                    type: 'error',
+                    message: 'Crawl Failed: Blocked by CORS/WAF or API Unavailable. Run locally for full power.',
+                    code: 'CRAWL-FAIL'
+                }]
+            };
+        }
     }
 
-    // Mock Asset
-    const assets = [];
-    if (Math.random() > 0.5) {
-        assets.push({
-            url: `https://${domain}/logo.png`,
-            type: 'image' as const,
-            alt: Math.random() > 0.5 ? 'Logo' : '',
-            missingAlt: Math.random() > 0.5
-        });
+    const contentType = response.headers['content-type'] || 'text/html';
+    const html = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+    const time = Date.now() - start;
+
+    // Detect bot protection (on real data)
+    const isBotChallenge = html && (
+        html.includes('cloudflare') ||
+        html.includes('challenge-platform') ||
+        html.includes('Verify you are human') ||
+        html.includes('Access Denied') ||
+        html.includes('captcha') ||
+        html.includes('sucuri') ||
+        html.includes('security') ||
+        html.includes('sgcaptcha') ||
+        (html.length < 5000 && (html.toLowerCase().includes('javascript') || html.toLowerCase().includes('enable cookies') || html.toLowerCase().includes('wait')))
+    );
+
+    if (isBotChallenge) {
+        // Try server fallback for bot protection
+        try {
+            return await crawlViaServer(url, rules);
+        } catch (e) {
+            return {
+                url,
+                status: 403,
+                contentType: 'text/html',
+                size: html.length,
+                time,
+                links: [],
+                assets: [],
+                details: {
+                    title: 'Bot Protection Triggered',
+                    description: '',
+                    h1: '',
+                    h2: [],
+                    wordCount: 0,
+                    canonical: '',
+                    metaRobots: '',
+                    xRobotsTag: '',
+                    hreflang: [],
+                    relNext: '',
+                    relPrev: '',
+                    amphtml: '',
+                    structuredData: []
+                },
+                customData: {},
+                issues: [{
+                    type: 'error',
+                    message: 'Bot Protection: Access Restricted by Server',
+                    code: 'BOT-BLOCK'
+                }]
+            };
+        }
     }
 
-    return {
+    // COPY OF PARSING LOGIC FOR CLIENT SIDE SUCCESS
+    const pageData: PageData = {
         url,
-        status,
-        contentType: 'text/html',
-        size: Math.floor(Math.random() * 50000) + 10000,
-        time: Math.floor(Math.random() * 800) + 200,
-        links,
-        assets,
+        status: response.status,
+        contentType: contentType.split(';')[0],
+        size: html.length,
+        time,
+        links: [],
+        assets: [],
         details: {
-            title,
-            description: `This is a simulated meta description for ${url}. It is generated by the Demo Mode crawler.`,
-            h1: Math.random() > 0.2 ? title : '',
-            h2: ['Introduction', 'Features', 'Contact'],
-            wordCount: Math.floor(Math.random() * 2000) + 300,
-            canonical: url,
-            metaRobots: 'index, follow',
+            title: '',
+            description: '',
+            h1: '',
+            h2: [],
+            wordCount: 0,
+            canonical: '',
+            metaRobots: '',
             xRobotsTag: '',
             hreflang: [],
             relNext: '',
@@ -119,265 +199,164 @@ async function mockCrawl(url: string): Promise<PageData> {
             structuredData: []
         },
         customData: {},
-        issues: mockIssues as any
+        issues: []
     };
-}
 
-async function crawlViaServer(url: string, rules: any = []): Promise<PageData> {
-    console.log(`[SF-CLIENT] Falling back to Server-Side Stealth Crawler for: ${url}`);
-    try {
-        // Respecting basePath: /seospider
-        const response = await axios.post('/seospider/api/crawl', { url, rules });
-        return response.data;
-    } catch (error: any) {
-        console.error("[SF-CLIENT] Server Fallback Failed:", error);
+    if (typeof html === 'string') {
+        const $ = cheerio.load(html);
 
-        // STATIC HOST DETECTION:
-        // If API is 404 (Not Found) or 405 (Method Not Allowed - GH Pages serves static HTML for POST), 
-        // Trigger Demo Mode.
-        if (error.response?.status === 404 || error.response?.status === 405 || error.message.includes('Network Error')) {
-            console.warn('[SF-INFO] Static Host Detected. Switching to DEMO MOCK CRAWLER.');
-            return await mockCrawl(url);
-        }
+        // --- Metadata ---
+        pageData.details.title = $('title').text().trim() || '';
+        pageData.details.description = $('meta[name="description"]').attr('content') || '';
+        pageData.details.h1 = $('h1').first().text().trim() || '';
 
-        if (error.response?.status === 404) {
-            throw new Error('Server Crawler API not found (Check BasePath configuration)');
-        }
-        throw new Error(error.response?.data?.error || 'Server Crawl Failed');
-    }
-}
+        // H2s
+        $('h2').each((_, el) => {
+            const text = $(el).text().trim();
+            if (text) pageData.details.h2.push(text);
+        });
 
-export async function crawlPageClientSide(url: string, rules: any = []): Promise<PageData> {
-    const targetUrl = new URL(url);
-    const start = Date.now();
-    let response;
-    let usedFallback = false;
+        // Canonicals & Pagination
+        pageData.details.canonical = $('link[rel="canonical"]').attr('href') || '';
+        pageData.details.relNext = $('link[rel="next"]').attr('href') || '';
+        pageData.details.relPrev = $('link[rel="prev"]').attr('href') || '';
+        pageData.details.amphtml = $('link[rel="amphtml"]').attr('href') || '';
 
-    try {
-        try {
-            response = await fetchWithRetry(url);
-        } catch (e) {
-            console.warn(`[SF-CLIENT] All proxies failed. Triggering Server Fallback.`);
-            return await crawlViaServer(url, rules);
-        }
+        // Meta Robots
+        pageData.details.metaRobots = $('meta[name="robots"]').attr('content') || '';
 
-        const contentType = response.headers['content-type'] || '';
-        const html = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
-
-        // Detect bot protection
-        const isBotChallenge = html && (
-            html.includes('cloudflare') ||
-            html.includes('challenge-platform') ||
-            html.includes('Verify you are human') ||
-            html.includes('Access Denied') ||
-            html.includes('captcha') ||
-            html.includes('sucuri') ||
-            html.includes('security') ||
-            html.includes('sgcaptcha') ||
-            (html.length < 5000 && (html.toLowerCase().includes('javascript') || html.toLowerCase().includes('enable cookies') || html.toLowerCase().includes('wait')))
-        );
-
-        if (isBotChallenge) {
-            console.warn(`[SF-WARNING] Bot Protection detected on client. Triggering Server Fallback.`);
-            return await crawlViaServer(url, rules);
-        }
-
-        const time = Date.now() - start;
-
-        // ... (Parse HTML logic remains same only if client-side worked) ...
-        // To avoid code duplication, we could extract the parsing logic, 
-        // but for now, we process the client-side result here.
-
-        // COPY OF PARSING LOGIC FOR CLIENT SIDE SUCCESS WITHOUT BOT BLOCK
-        const pageData: PageData = {
-            url,
-            status: response.status,
-            contentType: contentType.split(';')[0],
-            size: html.length,
-            time,
-            links: [],
-            assets: [],
-            details: {
-                title: '',
-                description: '',
-                h1: '',
-                h2: [],
-                wordCount: 0,
-                canonical: '',
-                metaRobots: '',
-                xRobotsTag: '',
-                hreflang: [],
-                relNext: '',
-                relPrev: '',
-                amphtml: '',
-                structuredData: []
-            },
-            customData: {},
-            issues: []
-        };
-
-        if (typeof html === 'string') {
-            const $ = cheerio.load(html);
-
-            // --- Metadata ---
-            pageData.details.title = $('title').text().trim() || '';
-            pageData.details.description = $('meta[name="description"]').attr('content') || '';
-            pageData.details.h1 = $('h1').first().text().trim() || '';
-
-            // H2s
-            $('h2').each((_, el) => {
-                const text = $(el).text().trim();
-                if (text) pageData.details.h2.push(text);
+        // Hreflang
+        $('link[rel="alternate"][hreflang]').each((_, el) => {
+            pageData.details.hreflang.push({
+                lang: $(el).attr('hreflang') || '',
+                url: $(el).attr('href') || ''
             });
+        });
 
-            // Canonicals & Pagination
-            pageData.details.canonical = $('link[rel="canonical"]').attr('href') || '';
-            pageData.details.relNext = $('link[rel="next"]').attr('href') || '';
-            pageData.details.relPrev = $('link[rel="prev"]').attr('href') || '';
-            pageData.details.amphtml = $('link[rel="amphtml"]').attr('href') || '';
+        // Structured Data (JSON-LD)
+        $('script[type="application/ld+json"]').each((_, el) => {
+            try {
+                const json = JSON.parse($(el).html() || '{}');
+                pageData.details.structuredData.push(json);
+            } catch { }
+        });
 
-            // Meta Robots
-            pageData.details.metaRobots = $('meta[name="robots"]').attr('content') || '';
+        const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
+        pageData.details.wordCount = bodyText ? bodyText.split(' ').length : 0;
 
-            // Hreflang
-            $('link[rel="alternate"][hreflang]').each((_, el) => {
-                pageData.details.hreflang.push({
-                    lang: $(el).attr('hreflang') || '',
-                    url: $(el).attr('href') || ''
-                });
-            });
-
-            // Structured Data (JSON-LD)
-            $('script[type="application/ld+json"]').each((_, el) => {
+        // --- Custom Extraction Execution ---
+        if (rules && Array.isArray(rules)) {
+            rules.forEach((rule: any) => {
+                const results: string[] = [];
                 try {
-                    const json = JSON.parse($(el).html() || '{}');
-                    pageData.details.structuredData.push(json);
-                } catch { }
-            });
-
-            const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
-            pageData.details.wordCount = bodyText ? bodyText.split(' ').length : 0;
-
-            // --- Custom Extraction Execution ---
-            if (rules && Array.isArray(rules)) {
-                rules.forEach((rule: any) => {
-                    const results: string[] = [];
-                    try {
-                        if (rule.type === 'css') {
-                            $(rule.value).each((_, el) => {
-                                results.push($(el).text().trim());
-                            });
-                        } else if (rule.type === 'regex') {
-                            const regex = new RegExp(rule.value, 'g');
-                            let match;
-                            while ((match = regex.exec(html)) !== null) {
-                                results.push(match[1] || match[0]);
-                            }
+                    if (rule.type === 'css') {
+                        $(rule.value).each((_, el) => {
+                            results.push($(el).text().trim());
+                        });
+                    } else if (rule.type === 'regex') {
+                        const regex = new RegExp(rule.value, 'g');
+                        let match;
+                        while ((match = regex.exec(html)) !== null) {
+                            results.push(match[1] || match[0]);
                         }
-                    } catch (e) {
-                        results.push('Extraction Error');
                     }
-                    if (results.length > 0) {
-                        pageData.customData[rule.name] = results;
-                    }
-                });
-            }
-
-            // --- Comprehensive Issue Detection ---
-            // Response Codes
-            if (response.status >= 400) pageData.issues.push({
-                type: 'error',
-                message: `Response Codes: Internal Client Error (${response.status})`,
-                code: 'HTTP-ERR'
-            });
-
-            // Page Titles
-            if (!pageData.details.title) pageData.issues.push({ type: 'error', message: 'Page Titles: Missing', code: 'TITLE-MISS' });
-            else {
-                if (pageData.details.title.length > 60) pageData.issues.push({ type: 'warning', message: 'Page Titles: Over 60 Characters', code: 'TITLE-LONG' });
-                if (pageData.details.title.length < 30) pageData.issues.push({ type: 'warning', message: 'Page Titles: Under 30 Characters', code: 'TITLE-SHORT' });
-            }
-
-            // Meta Descriptions
-            if (!pageData.details.description) pageData.issues.push({ type: 'warning', message: 'Meta Description: Missing', code: 'DESC-MISS' });
-            else {
-                if (pageData.details.description.length > 155) pageData.issues.push({ type: 'info', message: 'Meta Description: Over 155 Characters', code: 'DESC-LONG' });
-                if (pageData.details.description.length < 70) pageData.issues.push({ type: 'info', message: 'Meta Description: Under 70 Characters', code: 'DESC-SHORT' });
-            }
-
-            // H1
-            if (!pageData.details.h1) pageData.issues.push({ type: 'error', message: 'H1: Missing', code: 'H1-MISS' });
-            if ($('h1').length > 1) pageData.issues.push({ type: 'error', message: 'H1: Multiple', code: 'H1-MULT' });
-            if (pageData.details.h1 && pageData.details.h1 === pageData.details.title) pageData.issues.push({ type: 'warning', message: 'H1: Duplicate of Page Title', code: 'H1-DUP-TITLE' });
-
-            // H2
-            if (pageData.details.h2.length === 0) pageData.issues.push({ type: 'info', message: 'H2: Missing', code: 'H2-MISS' });
-            if (pageData.details.h2.length > 20) pageData.issues.push({ type: 'warning', message: 'H2: Multiple (High Count)', code: 'H2-MULT' });
-
-            // Canonicals
-            if (!pageData.details.canonical) pageData.issues.push({ type: 'error', message: 'Canonicals: Missing', code: 'CAN-MISS' });
-
-            // Content
-            if (pageData.details.wordCount < 300) pageData.issues.push({ type: 'warning', message: 'Content: Thin Content (< 300 words)', code: 'CONT-THIN' });
-            if (pageData.details.h2.length > 0 && !pageData.details.h1) pageData.issues.push({ type: 'error', message: 'Headings: H2 with Missing H1', code: 'HEAD-ORDER' });
-
-            // Schema / Structured Data
-            if (pageData.details.structuredData.length === 0) {
-                pageData.issues.push({ type: 'info', message: 'Schema: Missing Structured Data', code: 'SCHEMA-MISS' });
-            }
-
-            // --- Images ---
-            $('img').each((_, el) => {
-                const src = $(el).attr('src');
-                const alt = $(el).attr('alt');
-                const width = $(el).attr('width');
-                const height = $(el).attr('height');
-
-                if (src) {
-                    try {
-                        const abs = new URL(src, url).href;
-                        pageData.assets.push({ url: abs, type: 'image', alt: alt || '' });
-                    } catch { }
-
-                    if (!alt && !pageData.issues.some(i => i.message === 'Images: Missing Alt Text')) {
-                        pageData.issues.push({ type: 'warning', message: 'Images: Missing Alt Text', code: 'IMG-ALT' });
-                    }
-                    if ((!width || !height) && !pageData.issues.some(i => i.message === 'Images: Missing Size Attributes')) {
-                        pageData.issues.push({ type: 'info', message: 'Images: Missing Size Attributes', code: 'IMG-SIZE' });
-                    }
+                } catch (e) {
+                    results.push('Extraction Error');
                 }
-            });
-
-            // --- Internal Link Extraction ---
-            $('a').each((_, el) => {
-                const href = $(el).attr('href');
-                if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
-                    try {
-                        const absUrl = new URL(href, url).href;
-                        if (absUrl.startsWith('http')) {
-                            const linkUrl = new URL(absUrl);
-                            const cleanUrl = linkUrl.origin + linkUrl.pathname + linkUrl.search;
-
-                            const isInternal = linkUrl.hostname === targetUrl.hostname ||
-                                linkUrl.hostname.endsWith('.' + targetUrl.hostname) ||
-                                targetUrl.hostname.endsWith('.' + linkUrl.hostname);
-
-                            pageData.links.push({
-                                url: cleanUrl,
-                                type: isInternal ? 'internal' : 'external'
-                            });
-                        }
-                    } catch { }
+                if (results.length > 0) {
+                    pageData.customData[rule.name] = results;
                 }
             });
         }
 
-        return pageData;
+        // --- Comprehensive Issue Detection ---
+        // Response Codes
+        if (response.status >= 400) pageData.issues.push({
+            type: 'error',
+            message: `Response Codes: Internal Client Error (${response.status})`,
+            code: 'HTTP-ERR'
+        });
 
-    } catch (error: any) {
-        // If everything failed, try one last desperation server crawl if we haven't already
-        // (Though the catch block for fetchWithRetry handles most cases, this catches other logic errors)
-        console.error("Client Crawl Error, trying Server Fallback", error);
-        return await crawlViaServer(url, rules);
+        // Page Titles
+        if (!pageData.details.title) pageData.issues.push({ type: 'error', message: 'Page Titles: Missing', code: 'TITLE-MISS' });
+        else {
+            if (pageData.details.title.length > 60) pageData.issues.push({ type: 'warning', message: 'Page Titles: Over 60 Characters', code: 'TITLE-LONG' });
+            if (pageData.details.title.length < 30) pageData.issues.push({ type: 'warning', message: 'Page Titles: Under 30 Characters', code: 'TITLE-SHORT' });
+        }
+
+        // Meta Descriptions
+        if (!pageData.details.description) pageData.issues.push({ type: 'warning', message: 'Meta Description: Missing', code: 'DESC-MISS' });
+        else {
+            if (pageData.details.description.length > 155) pageData.issues.push({ type: 'info', message: 'Meta Description: Over 155 Characters', code: 'DESC-LONG' });
+            if (pageData.details.description.length < 70) pageData.issues.push({ type: 'info', message: 'Meta Description: Under 70 Characters', code: 'DESC-SHORT' });
+        }
+
+        // H1
+        if (!pageData.details.h1) pageData.issues.push({ type: 'error', message: 'H1: Missing', code: 'H1-MISS' });
+        if ($('h1').length > 1) pageData.issues.push({ type: 'error', message: 'H1: Multiple', code: 'H1-MULT' });
+        if (pageData.details.h1 && pageData.details.h1 === pageData.details.title) pageData.issues.push({ type: 'warning', message: 'H1: Duplicate of Page Title', code: 'H1-DUP-TITLE' });
+
+        // H2
+        if (pageData.details.h2.length === 0) pageData.issues.push({ type: 'info', message: 'H2: Missing', code: 'H2-MISS' });
+        if (pageData.details.h2.length > 20) pageData.issues.push({ type: 'warning', message: 'H2: Multiple (High Count)', code: 'H2-MULT' });
+
+        // Canonicals
+        if (!pageData.details.canonical) pageData.issues.push({ type: 'error', message: 'Canonicals: Missing', code: 'CAN-MISS' });
+
+        // Content
+        if (pageData.details.wordCount < 300) pageData.issues.push({ type: 'warning', message: 'Content: Thin Content (< 300 words)', code: 'CONT-THIN' });
+        if (pageData.details.h2.length > 0 && !pageData.details.h1) pageData.issues.push({ type: 'error', message: 'Headings: H2 with Missing H1', code: 'HEAD-ORDER' });
+
+        // Schema / Structured Data
+        if (pageData.details.structuredData.length === 0) {
+            pageData.issues.push({ type: 'info', message: 'Schema: Missing Structured Data', code: 'SCHEMA-MISS' });
+        }
+
+        // --- Images ---
+        $('img').each((_, el) => {
+            const src = $(el).attr('src');
+            const alt = $(el).attr('alt');
+            const width = $(el).attr('width');
+            const height = $(el).attr('height');
+
+            if (src) {
+                try {
+                    const abs = new URL(src, url).href;
+                    pageData.assets.push({ url: abs, type: 'image', alt: alt || '' });
+                } catch { }
+
+                if (!alt && !pageData.issues.some(i => i.message === 'Images: Missing Alt Text')) {
+                    pageData.issues.push({ type: 'warning', message: 'Images: Missing Alt Text', code: 'IMG-ALT' });
+                }
+                if ((!width || !height) && !pageData.issues.some(i => i.message === 'Images: Missing Size Attributes')) {
+                    pageData.issues.push({ type: 'info', message: 'Images: Missing Size Attributes', code: 'IMG-SIZE' });
+                }
+            }
+        });
+
+        // --- Internal Link Extraction ---
+        $('a').each((_, el) => {
+            const href = $(el).attr('href');
+            if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
+                try {
+                    const absUrl = new URL(href, url).href;
+                    if (absUrl.startsWith('http')) {
+                        const linkUrl = new URL(absUrl);
+                        const cleanUrl = linkUrl.origin + linkUrl.pathname + linkUrl.search;
+
+                        const isInternal = linkUrl.hostname === targetUrl.hostname ||
+                            linkUrl.hostname.endsWith('.' + targetUrl.hostname) ||
+                            targetUrl.hostname.endsWith('.' + linkUrl.hostname);
+
+                        pageData.links.push({
+                            url: cleanUrl,
+                            type: isInternal ? 'internal' : 'external'
+                        });
+                    }
+                } catch { }
+            }
+        });
     }
+
+    return pageData;
 }
