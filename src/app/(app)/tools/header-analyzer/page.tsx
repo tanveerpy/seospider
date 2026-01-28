@@ -74,6 +74,52 @@ export default function HeaderAnalyzerPage() {
                     </div>
                 )}
             </div>
+
+            {/* --- SEO CONTENT SECTION --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-12 border-t border-white/5">
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-black italic text-white uppercase">Hidden Signals: HTTP Headers</h2>
+                    <p className="text-slate-400 leading-relaxed">
+                        Before a search engine bot even sees your HTML, it reads the HTTP response headers.
+                        Misconfigured headers can accidentally block crawling, cause security warnings, or confuse indexers about the content type.
+                    </p>
+                    <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
+                        <h3 className="font-bold text-white mb-2">The <code className="text-emerald-400">X-Robots-Tag</code></h3>
+                        <p className="text-sm text-slate-400">
+                            Did you know you can <strong>noindex</strong> a PDF or image file using headers?
+                            Since non-HTML files don't have a &lt;head&gt; section, this is the only way to control their indexing.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <h3 className="font-bold text-white mb-2 uppercase tracking-widest text-xs">Critical Security Headers</h3>
+
+                    <div className="group p-4 rounded-xl border border-white/5 hover:bg-white/5 transition-colors">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="font-mono text-emerald-400 text-sm">Strict-Transport-Security (HSTS)</span>
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded">Required</span>
+                        </div>
+                        <p className="text-xs text-slate-500">Forces browsers (and Googlebot) to use HTTPS, preserving your secure ranking boost.</p>
+                    </div>
+
+                    <div className="group p-4 rounded-xl border border-white/5 hover:bg-white/5 transition-colors">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="font-mono text-emerald-400 text-sm">X-Content-Type-Options</span>
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded">Recommended</span>
+                        </div>
+                        <p className="text-xs text-slate-500">Prevents MIME-sniffing, reducing the risk of drive-by downloads.</p>
+                    </div>
+
+                    <div className="group p-4 rounded-xl border border-white/5 hover:bg-white/5 transition-colors">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="font-mono text-emerald-400 text-sm">Content-Security-Policy (CSP)</span>
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded">Critical</span>
+                        </div>
+                        <p className="text-xs text-slate-500">Mitigates XSS attacks. Note: Ensure your CSP allows Googlebot to load external JS resources for rendering.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

@@ -77,6 +77,47 @@ export default function DomAnalyzerPage() {
                     </div>
                 )}
             </div>
+
+            {/* --- SEO CONTENT SECTION --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/5">
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-black italic text-white uppercase">The Hidden Cost of Rendering</h2>
+                    <p className="text-slate-400 leading-relaxed">
+                        Modern JavaScript frameworks like React, Vue, and Angular shift the burden of rendering to the client's device (CSR).
+                        While this creates fluid UX, it challenges search engines. If Googlebot runs out of <strong>render budget</strong> or hits a timeout, your content stays invisible.
+                    </p>
+                    <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
+                        <h3 className="font-bold text-white mb-2">What is DOM Depth?</h3>
+                        <p className="text-sm text-slate-400">
+                            The Document Object Model (DOM) is the tree structure of your HTML. An excessive depth (nested div soup) increases memory usage and slows down the browser's style calculation, hurting your <strong>Interaction to Next Paint (INP)</strong> score.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <h3 className="font-bold text-white mb-2 uppercase tracking-widest text-xs">Technical Impacts</h3>
+                    <ul className="space-y-4">
+                        <li className="flex gap-4">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-bold text-xs">
+                                <Zap size={14} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-white">Hydration Mismatches</h4>
+                                <p className="text-xs text-slate-400 mt-1">If server HTML differs from client JS, React discards the DOM and rebuilds it, causing layout shifts (CLS).</p>
+                            </div>
+                        </li>
+                        <li className="flex gap-4">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-bold text-xs">
+                                <Boxes size={14} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-white">Node Count limit</h4>
+                                <p className="text-xs text-slate-400 mt-1">Lighthouse warns if your DOM exceeds 1,500 nodes. Large DOMs increase main-thread work.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     );
 }
