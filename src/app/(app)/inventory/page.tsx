@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { generateAgencyReport, generateXMLSitemap, exportToCSV } from '@/lib/exportUtils';
 import { useCrawlerStore } from '@/lib/store';
 import {
     Database,
@@ -15,7 +16,8 @@ import {
     Terminal,
     Cpu,
     Zap,
-    Tag
+    Tag,
+    FileCode
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -40,7 +42,14 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="flex gap-4">
-                    <button className="px-8 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-3">
+                    <button
+                        onClick={() => generateXMLSitemap(pages)}
+                        className="px-6 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/10 transition-all flex items-center gap-3">
+                        <FileCode size={14} /> XML Sitemap
+                    </button>
+                    <button
+                        onClick={() => exportToCSV(pages)}
+                        className="px-8 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all flex items-center gap-3">
                         <Download size={14} /> Export CSV
                     </button>
                 </div>
