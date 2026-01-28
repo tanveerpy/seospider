@@ -8,6 +8,12 @@ export interface ExtractionRule {
     value: string;
 }
 
+export interface Issue {
+    type: 'error' | 'warning' | 'info';
+    message: string;
+    code?: string;
+}
+
 export interface PageData {
     url: string;
     status: number;
@@ -32,7 +38,7 @@ export interface PageData {
         structuredData: any[];
     };
     customData: Record<string, string[]>;
-    issues: string[];
+    issues: Issue[];
 }
 
 interface CrawlerState {
@@ -65,13 +71,13 @@ export const useCrawlerStore = create<CrawlerState>()(
 
             startCrawl: (url) => {
                 try {
-                    const domain = new URL(url).hostname;
+                    const normalizedDomain = new URL(url).hostname.replace(/^www\./, '');
                     set({
                         pages: {},
                         queue: [url],
                         processed: new Set([url]),
                         isCrawling: true,
-                        rootDomain: domain
+                        rootDomain: normalizedDomain
                     });
                 } catch {
                     // Invalid URL
@@ -106,14 +112,14 @@ export const useCrawlerStore = create<CrawlerState>()(
                     const isDescDup = p.details?.description ? (descMap[p.details.description] || []).length > 1 : false;
 
                     // Only update if duplicate status changed or if it's the new page
-                    const hasExistingTitleDup = p.issues?.includes('Page Titles: Duplicate');
-                    const hasExistingDescDup = p.issues?.includes('Meta Description: Duplicate');
+                    const hasExistingTitleDup = p.issues?.some(i => i.message === 'Page Titles: Duplicate');
+                    const hasExistingDescDup = p.issues?.some(i => i.message === 'Meta Description: Duplicate');
 
                     if (isTitleDup !== hasExistingTitleDup || isDescDup !== hasExistingDescDup || p.url === page.url) {
                         // Remove existing duplicate issues before re-adding
-                        let nextIssues = (p.issues || []).filter(i => i !== 'Page Titles: Duplicate' && i !== 'Meta Description: Duplicate');
-                        if (isTitleDup) nextIssues.push('Page Titles: Duplicate');
-                        if (isDescDup) nextIssues.push('Meta Description: Duplicate');
+                        let nextIssues = (p.issues || []).filter(i => i.message !== 'Page Titles: Duplicate' && i.message !== 'Meta Description: Duplicate');
+                        if (isTitleDup) nextIssues.push({ type: 'error', message: 'Page Titles: Duplicate', code: 'DUP-TITLE' });
+                        if (isDescDup) nextIssues.push({ type: 'warning', message: 'Meta Description: Duplicate', code: 'DUP-DESC' });
 
                         finalPages[p.url] = { ...p, issues: nextIssues };
                     } else {
@@ -132,7 +138,8 @@ export const useCrawlerStore = create<CrawlerState>()(
                     // Only enqueue if not processed and is internal
                     if (!newProcessed.has(u)) {
                         try {
-                            if (new URL(u).hostname === state.rootDomain) {
+                            const linkHostname = new URL(u).hostname.replace(/^www\./, '');
+                            if (linkHostname === state.rootDomain || linkHostname.endsWith('.' + state.rootDomain)) {
                                 newQueue.push(u);
                                 newProcessed.add(u);
                             }

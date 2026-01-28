@@ -1,0 +1,57 @@
+/* Robust Layout System - Enforcing Dimensions */
+.layout-root {
+    display: flex !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    background-color: #020617;
+    /* bg-void */
+    color: #f8fafc;
+    /* text-slate-100 */
+}
+
+/* Sidebar: Fixed Width, Strict Flex */
+.layout-sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background-color: #0f172a;
+    /* bg-panel */
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    /* border-subtle */
+    z-index: 50;
+    position: relative;
+}
+
+/* Main Content: Takes remaining space */
+.layout-main {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    /* CSS Grid/Flex hack for overflow */
+    overflow: hidden !important;
+    position: relative;
+}
+
+/* Content Viewport: Scrollable area */
+.layout-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 32px;
+}
+
+/* Header: Fixed Height */
+.layout-header {
+    height: 80px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}

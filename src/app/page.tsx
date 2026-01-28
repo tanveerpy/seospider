@@ -6,287 +6,204 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight,
   Terminal,
-  ShieldCheck,
-  Globe,
   Zap,
-  Share2,
-  BarChart3,
-  Search,
   LayoutDashboard,
-  FileText,
-  GitBranch,
-  BookOpen,
-  Link2,
-  Type,
+  Shield,
   Activity,
   Cpu,
-  Code2
+  Fingerprint,
+  Link as LinkIcon,
+  Globe,
+  BarChart,
+  Search
 } from 'lucide-react';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-grid relative overflow-hidden">
+    <div className="min-h-screen bg-[#020617] text-white overflow-hidden relative font-sans selection:bg-emerald-500/20">
 
-      {/* --- Ambient Glow (Technical/Subtle) --- */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none z-0" />
+      {/* --- BACKGROUND COMPOSITION --- */}
+      <div className="fixed inset-0 z-0 bg-cyber-grid pointer-events-none opacity-40"></div>
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none z-1 overflow-hidden" />
+      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none z-1" />
 
-      {/* --- Navigation --- */}
-      <nav className="relative z-50 border-b border-[var(--border-subtle)] bg-[var(--bg-void)]/80 backdrop-blur-md">
-        <div className="container h-20 flex items-center justify-between gap-8">
-          <div className="flex items-center gap-3 min-w-fit">
-            <div className="w-10 h-10 bg-[var(--accent-dim)] border border-[var(--accent-border)] rounded-[var(--radius-md)] flex items-center justify-center">
-              <Terminal size={20} className="text-[var(--accent-primary)]" />
+      {/* --- NAVIGATION --- */}
+      <nav className="fixed top-0 w-full z-50 h-24 border-b border-white/5 backdrop-blur-2xl bg-black/20">
+        <div className="container mx-auto px-10 h-full flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+              <Terminal size={20} className="text-emerald-400" />
             </div>
-            <span className="text-xl font-bold tracking-tight whitespace-nowrap">
-              SPIDER<span className="text-[var(--accent-primary)]">FROG</span>
+            <span className="text-2xl font-black italic tracking-tighter uppercase">
+              Spider<span className="text-emerald-500 font-black">Frog</span>
             </span>
           </div>
 
-          <div className="hidden lg:flex items-center gap-8 flex-1 justify-center">
-            <Link href="/tools" className="text-slate-400 hover:text-slate-50 text-sm font-medium transition-colors">
-              Tools API
-            </Link>
-            <Link href="/docs" className="text-slate-400 hover:text-slate-50 text-sm font-medium transition-colors">
-              Documentation
-            </Link>
-            <Link href="/pricing" className="text-slate-400 hover:text-slate-50 text-sm font-medium transition-colors">
-              Pricing
-            </Link>
+          <div className="hidden lg:flex items-center gap-12">
+            {['Engine', 'Documentation', 'Access API', 'Enterprise'].map((item) => (
+              <Link key={item} href="#" className="text-slate-400 hover:text-white text-xs font-black uppercase tracking-[0.2em] transition-all hover:tracking-[0.3em]">
+                {item}
+              </Link>
+            ))}
           </div>
 
-          <div className="flex items-center gap-4 min-w-fit">
-            <Link href="/dashboard">
-              <button className="btn btn-primary btn-sm">
-                <LayoutDashboard size={16} />
-                Console
-              </button>
-            </Link>
-          </div>
+          <Link href="/dashboard">
+            <button className="bg-white/5 border border-white/10 px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all flex items-center gap-2">
+              <LayoutDashboard size={14} className="text-emerald-500" />
+              Open Dashboard
+            </button>
+          </Link>
         </div>
       </nav>
 
-      {/* --- Hero Section --- */}
-      <section className="relative z-10 pt-32 pb-20 text-center container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-4xl mx-auto flex flex-col items-center"
-        >
-          {/* Status Badge */}
-          <div className="badge-mono mb-8">
-            <span className="relative flex h-2 w-2 mr-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            System v2.0 Online
-          </div>
+      {/* --- HERO SECTION --- */}
+      <section className="relative z-10 pt-56 pb-40 container mx-auto px-10">
+        <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
 
-          <h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-8 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-            SEO Audits.<br />
-            <span className="text-[var(--accent-primary)] font-mono tracking-tight">Executed.</span>
-          </h1>
-
-          <p className="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed mb-12">
-            The developer-first SEO crawler. Detect hydration errors,
-            visualize link equity, and optimize Core Web Vitals via one unified console.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/dashboard">
-              <button className="btn btn-primary">
-                <Zap size={18} />
-                Initialize Crawl
-              </button>
-            </Link>
-            <button className="btn btn-secondary text-[var(--text-secondary)]">
-              <Code2 size={18} />
-              View API Docs
-            </button>
-          </div>
-        </motion.div>
-
-        {/* --- Terminal Preview --- */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
-          animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className="mt-24 relative max-w-5xl mx-auto perspective-1000"
-        >
-          <div className="bg-[#0f172a] rounded-t-lg border border-[var(--border-subtle)] shadow-2xl overflow-hidden text-left font-mono text-sm leading-6">
-            {/* Terminal Header */}
-            <div className="bg-[#1e293b] px-4 py-2 border-b border-[var(--border-subtle)] flex items-center justify-between">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-slate-600" />
-                <div className="w-3 h-3 rounded-full bg-slate-600" />
-                <div className="w-3 h-3 rounded-full bg-slate-600" />
-              </div>
-              <div className="text-slate-500 text-xs">spider-frog-cli — node — 80x24</div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center"
+          >
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-[0.25em] mb-12 animate-pulse">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              SEO Spider v2.4 - Stable Release
             </div>
 
-            {/* Terminal Body */}
-            <div className="p-6 text-slate-300">
-              <div className="flex gap-2">
-                <span className="text-emerald-500">➜</span>
-                <span className="text-blue-400">~</span>
-                <span>spiderfrog crawl --url https://writeoffcalc.com --depth 3</span>
-              </div>
-              <div className="mt-2 text-slate-400">
-                [info] Starting crawler engine v2.4.0<br />
-                [info] Target resolved: 104.21.32.145 (Cloudflare)<br />
-                [====&gt;          ] 32% - Discovered 142 links...<br />
-                <span className="text-yellow-500">[warn] /blog/tax-deductions has missing meta description</span><br />
-                <span className="text-red-500">[error] /api/legacy-calc returned 404 (Broken Link)</span><br />
-                <span className="text-emerald-500">[success] Crawl complete. 342 pages indexed in 4.2s.</span>
-              </div>
-              <div className="mt-4 flex gap-2 animate-pulse">
-                <span className="text-emerald-500">➜</span>
-                <span className="text-blue-400">~</span>
-                <span className="w-2 h-5 bg-slate-500 block" />
-              </div>
-            </div>
+            <h1 className="text-7xl md:text-9xl font-black tracking-tighter leading-[0.9] mb-12 italic text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-500 drop-shadow-2xl">
+              AUDIT THE <br />
+              <span className="text-emerald-500 drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]">INVISIBLE.</span>
+            </h1>
 
-            {/* Grid Overlay for realism */}
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\' opacity=\'1\'/%3E%3C/svg%3E')] opacity-[0.03] pointer-events-none mix-blend-overlay"></div>
-          </div>
-
-          {/* Reflection */}
-          <div className="absolute top-full left-0 right-0 h-40 bg-gradient-to-b from-[var(--bg-panel)]/50 to-transparent blur-xl transform scale-y-[-1] opacity-30 pointer-events-none" />
-        </motion.div>
-      </section>
-
-      {/* --- Features Grid --- */}
-      <section className="py-32 container relative z-10">
-        <div className="text-center max-w-2xl mx-auto mb-20">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">Core Architecture</h2>
-          <p className="text-[var(--text-secondary)] text-lg">
-            Built without bloat. Pure performance for serious SEOs.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard
-            icon={Zap}
-            title="Render-Engine"
-            desc="Executes JS-heavy pages (React, Vue, Angular) to see exactly what Googlebot sees."
-          />
-          <FeatureCard
-            icon={GitBranch}
-            title="Link Topology"
-            desc="Visualize equity flow distributed via Force-Directed Internal Graphs."
-          />
-          <FeatureCard
-            icon={ShieldCheck}
-            title="Heuristic Audit"
-            desc="Automated checks for 140+ common technical SEO failures and hydration issues."
-          />
-          <FeatureCard
-            icon={Cpu}
-            title="Local Execution"
-            desc="Available as a self-hosted Docker container or managed cloud instance."
-          />
-          <FeatureCard
-            icon={BarChart3}
-            title="Raw Data Export"
-            desc="Full JSON/CSV pipelines for integration with BigQuery or Looker Studio."
-          />
-          <FeatureCard
-            icon={Terminal}
-            title="CLI Interface"
-            desc="Headless mode support for CI/CD pipeline integration and regressions."
-          />
-        </div>
-      </section>
-
-      {/* --- Utility Tools --- */}
-      <section className="py-24 border-t border-[var(--border-subtle)] bg-[var(--bg-panel)]/30">
-        <div className="container">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <div className="badge-mono mb-4 text-xs font-mono">Open Source Utilities</div>
-              <h2 className="text-3xl font-bold">Quick Tools</h2>
-            </div>
-            <Link href="/tools" className="btn btn-secondary btn-sm hidden md:flex">
-              View All Tools <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <ToolCard icon={FileText} label="Robots.txt Gen" />
-            <ToolCard icon={GitBranch} label="Sitemap Builder" />
-            <ToolCard icon={BookOpen} label="Readability Calc" />
-            <ToolCard icon={Link2} label="Slug Cleaner" />
-            <ToolCard icon={Type} label="Keyword Density" />
-            <ToolCard icon={Activity} label="Status Checker" />
-            <ToolCard icon={Search} label="SERP Simulator" />
-            <ToolCard icon={Code2} label="Schema Generator" />
-          </div>
-        </div>
-      </section>
-
-      {/* --- Footer --- */}
-      <footer className="border-t border-[var(--border-subtle)] bg-[var(--bg-panel)] pt-20 pb-12">
-        <div className="container flex flex-col md:flex-row justify-between gap-12 mb-16">
-          <div className="max-w-xs">
-            <div className="flex items-center gap-2 mb-6">
-              <Terminal size={24} className="text-[var(--accent-primary)]" />
-              <span className="font-bold text-xl tracking-tight">SPIDER<span className="text-[var(--accent-primary)]">FROG</span></span>
-            </div>
-            <p className="text-[var(--text-tertiary)] text-sm leading-relaxed">
-              Advanced technical SEO infrastructure for the modern web.
-              Built by Tanveer Ahmed.
+            <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-16 font-medium">
+              The high-precision SEO crawler for web professionals. Detect issues,
+              analyze internal links, and optimize your site via one powerful interface.
             </p>
-          </div>
 
-          <div className="flex gap-16 text-sm">
-            <div className="flex flex-col gap-4">
-              <h4 className="font-bold text-slate-50">Platform</h4>
-              <Link href="/features" className="text-slate-400 hover:text-white transition-colors">Features</Link>
-              <Link href="/pricing" className="text-slate-400 hover:text-white transition-colors">Pricing</Link>
-              <Link href="/integrations" className="text-slate-400 hover:text-white transition-colors">Integrations</Link>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <Link href="/dashboard">
+                <button className="px-12 py-5 bg-emerald-500 text-black rounded-3xl text-sm font-black uppercase tracking-widest shadow-[0_0_40px_rgba(16,185,129,0.4)] hover:scale-105 transition-all flex items-center gap-3">
+                  <Zap size={20} className="fill-black" />
+                  Start Crawling
+                </button>
+              </Link>
+              <button className="px-12 py-5 bg-white/5 border border-white/10 text-white rounded-3xl text-sm font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
+                <Terminal size={18} />
+                User Documentation
+              </button>
             </div>
-            <div className="flex flex-col gap-4">
-              <h4 className="font-bold text-slate-50">Resources</h4>
-              <Link href="/docs" className="text-slate-400 hover:text-white transition-colors">Documentation</Link>
-              <Link href="/status" className="text-slate-400 hover:text-white transition-colors">Status</Link>
-              <Link href="/changelog" className="text-slate-400 hover:text-white transition-colors">Changelog</Link>
-              <Link href="/community" className="text-slate-400 hover:text-white transition-colors">Community</Link>
-              <Link href="/api-docs" className="text-slate-400 hover:text-white transition-colors">API</Link>
+          </motion.div>
+
+          {/* Device Preview / Terminal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, rotateX: 20 }}
+            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+            transition={{ delay: 0.4, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-32 w-full max-w-6xl relative group"
+          >
+            <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] rounded-full transition-all group-hover:bg-emerald-500/20" />
+            <div className="relative glass border border-white/10 rounded-3xl shadow-2xl overflow-hidden text-left font-mono text-xs leading-[1.8]">
+              {/* Toolbar */}
+              <div className="bg-[#1e293b]/50 px-6 py-4 flex items-center justify-between border-b border-white/5">
+                <div className="flex gap-2.5">
+                  <div className="w-3.5 h-3.5 rounded-full bg-slate-700/50" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-slate-700/50" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-slate-700/50" />
+                </div>
+                <div className="text-slate-500 text-[10px] uppercase font-black tracking-widest">
+                  spiderfrog-console — v2.4.0 — optimized
+                </div>
+                <Activity size={12} className="text-emerald-500/50" />
+              </div>
+
+              {/* Lines */}
+              <div className="p-8 text-slate-400 space-y-2 max-h-[400px] overflow-hidden">
+                <div className="flex gap-4">
+                  <span className="text-emerald-500">SF-INIT:</span>
+                  <span>Neural network loading... success (2.4s)</span>
+                </div>
+                <div className="flex gap-4">
+                  <span className="text-cyan-500">TARGET:</span>
+                  <span className="text-white underline">https://enterprise-node.sh</span>
+                </div>
+                <div className="flex gap-4">
+                  <span className="text-yellow-500">CRAWL:</span>
+                  <span>Executing 512 recursive instances... [████████░░] 82%</span>
+                </div>
+                <div className="flex gap-4 opacity-70">
+                  <span className="text-slate-600">INFRA:</span>
+                  <span>Detected React v19.0.2 / Headless Chromium v132</span>
+                </div>
+                <div className="mt-6 flex flex-col gap-1 p-6 bg-black/40 border border-white/5 rounded-2xl">
+                  <span className="text-[10px] text-emerald-500 font-black mb-2 uppercase tracking-tight">Real-Time Performance Data</span>
+                  <div className="flex items-end gap-2">
+                    <div className="w-2 h-8 bg-emerald-500/20 animate-pulse"></div>
+                    <div className="w-2 h-16 bg-emerald-500/40 animate-pulse delay-75"></div>
+                    <div className="w-2 h-12 bg-emerald-500/60 animate-pulse delay-100"></div>
+                    <div className="w-2 h-24 bg-emerald-500 animate-pulse delay-150 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
+                    <div className="w-2 h-14 bg-emerald-500/40 animate-pulse delay-300"></div>
+                    <div className="w-2 h-20 bg-emerald-500/20 animate-pulse delay-500"></div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
+      </section>
 
-        <div className="container pt-8 border-t border-[var(--border-subtle)] flex flex-col md:flex-row justify-between items-center text-xs text-[var(--text-tertiary)]">
-          <div>&copy; 2026 SpiderFrog Online. All systems nominal.</div>
-          <div className="font-mono mt-4 md:mt-0">v2.4.0-stable</div>
+      {/* --- FEATURES GRID --- */}
+      <section className="py-40 container mx-auto px-10 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <FeatureCard
+            icon={Fingerprint}
+            title="SEO Intelligence"
+            desc="Automatically identify structural issues and metadata gaps across your entire website."
+          />
+          <FeatureCard
+            icon={Activity}
+            title="Performance Audit"
+            desc="Analyze page load speeds and identify bottlenecks to improve your search rankings."
+          />
+          <FeatureCard
+            icon={Shield}
+            title="Health Check"
+            desc="Detect broken links, mixed content, and security vulnerabilities instantly."
+          />
+        </div>
+      </section>
+
+      {/* --- FOOTER --- */}
+      <footer className="py-20 border-t border-white/5 container mx-auto px-10 relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-10">
+          <div className="flex items-center gap-4">
+            <Terminal size={20} className="text-emerald-500" />
+            <span className="text-lg font-black italic tracking-tighter uppercase underline decoration-emerald-500 underline-offset-4 decoration-2">
+              SpiderFrog
+            </span>
+          </div>
+          <div className="text-slate-500 text-[10px] font-mono uppercase tracking-[0.2em]">
+            &copy; 2026 SpiderFrog. All rights reserved.
+          </div>
         </div>
       </footer>
-
     </div>
   );
 }
-
-// --- Subcomponents ---
 
 function FeatureCard({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
   return (
-    <div className="card-tech group">
-      <div className="mb-6 w-12 h-12 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] flex items-center justify-center group-hover:border-[var(--accent-border)] transition-colors">
-        <Icon size={24} className="text-[var(--text-secondary)] group-hover:text-[var(--accent-primary)] transition-colors" />
+    <div className="glass-card p-10 rounded-[40px] group">
+      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 mb-8 group-hover:scale-110 group-hover:border-emerald-500/20 transition-all">
+        <Icon size={24} className="text-slate-500 group-hover:text-emerald-400 transition-colors" />
       </div>
-      <h3 className="text-xl font-bold mb-3 group-hover:text-[var(--accent-primary)] transition-colors">{title}</h3>
-      <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+      <h3 className="text-2xl font-black italic tracking-tighter mb-4 text-white group-hover:text-emerald-500 transition-colors">{title}</h3>
+      <p className="text-slate-400 leading-relaxed font-medium">
         {desc}
       </p>
     </div>
-  );
-}
-
-function ToolCard({ icon: Icon, label }: { icon: any, label: string }) {
-  return (
-    <Link href="/tools" className="flex flex-col items-center justify-center p-6 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] hover:border-[var(--accent-border)] hover:bg-[var(--bg-surface)]/80 transition-all group">
-      <Icon size={24} className="text-[var(--text-tertiary)] mb-3 group-hover:text-[var(--accent-primary)] transition-colors" />
-      <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">{label}</span>
-    </Link>
   );
 }

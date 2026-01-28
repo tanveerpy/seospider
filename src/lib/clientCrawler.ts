@@ -6,8 +6,18 @@ import { PageData } from './store';
 const CORS_PROXIES = [
     (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
     (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`, // Fallbacks
+    (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
 ];
+
+const USER_AGENTS = [
+    'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    'Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+];
+
+const getRandomUA = () => USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 
 async function fetchWithRetry(url: string, retries = 3): Promise<any> {
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -16,7 +26,11 @@ async function fetchWithRetry(url: string, retries = 3): Promise<any> {
             try {
                 const proxyUrl = proxy(url);
                 const response = await axios.get(proxyUrl, {
-                    timeout: 10000 // 10s timeout to avoid hanging
+                    timeout: 20000, // 20s timeout
+                    headers: {
+                        'User-Agent': getRandomUA(),
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    }
                 });
 
                 // If success, return response immediately
@@ -25,36 +39,74 @@ async function fetchWithRetry(url: string, retries = 3): Promise<any> {
                 }
             } catch (e) {
                 // Continue to next proxy
-                console.warn(`Proxy failed: ${proxy(url)}`, e);
+                // console.warn(`Proxy failed: ${proxy(url)}`, e);
             }
         }
 
         // If all proxies failed this attempt, wait before retrying (Exponential Backoff)
         const delay = 1000 * Math.pow(2, attempt);
-        console.log(`All proxies failed for ${url}, retrying in ${delay}ms...`);
         await new Promise(r => setTimeout(r, delay));
     }
     throw new Error('All connection attempts failed after retries.');
 }
 
-export async function crawlPageClientSide(url: string, rules: any = []): Promise<PageData> {
+async function crawlViaServer(url: string, rules: any = []): Promise<PageData> {
+    console.log(`[SF-CLIENT] Falling back to Server-Side Stealth Crawler for: ${url}`);
     try {
-        const targetUrl = new URL(url);
-        const start = Date.now();
+        // Respecting basePath: /seospider
+        const response = await axios.post('/seospider/api/crawl', { url, rules });
+        return response.data;
+    } catch (error: any) {
+        console.error("[SF-CLIENT] Server Fallback Failed:", error);
+        if (error.response?.status === 404) {
+            throw new Error('Server Crawler API not found (Check BasePath configuration)');
+        }
+        throw new Error(error.response?.data?.error || 'Server Crawl Failed');
+    }
+}
 
-        let response;
+export async function crawlPageClientSide(url: string, rules: any = []): Promise<PageData> {
+    const targetUrl = new URL(url);
+    const start = Date.now();
+    let response;
+    let usedFallback = false;
+
+    try {
         try {
             response = await fetchWithRetry(url);
         } catch (e) {
-            // Final fallback: just try fetch directly (might work if CORS is open)
-            throw new Error('All Proxies Failed');
+            console.warn(`[SF-CLIENT] All proxies failed. Triggering Server Fallback.`);
+            return await crawlViaServer(url, rules);
+        }
+
+        const contentType = response.headers['content-type'] || '';
+        const html = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+
+        // Detect bot protection
+        const isBotChallenge = html && (
+            html.includes('cloudflare') ||
+            html.includes('challenge-platform') ||
+            html.includes('Verify you are human') ||
+            html.includes('Access Denied') ||
+            html.includes('captcha') ||
+            html.includes('sucuri') ||
+            html.includes('security') ||
+            html.includes('sgcaptcha') ||
+            (html.length < 5000 && (html.toLowerCase().includes('javascript') || html.toLowerCase().includes('enable cookies') || html.toLowerCase().includes('wait')))
+        );
+
+        if (isBotChallenge) {
+            console.warn(`[SF-WARNING] Bot Protection detected on client. Triggering Server Fallback.`);
+            return await crawlViaServer(url, rules);
         }
 
         const time = Date.now() - start;
 
-        const contentType = response.headers['content-type'] || '';
-        const html = response.data;
+        // ... (Parse HTML logic remains same only if client-side worked) ...
+        // To avoid code duplication, we could extract the parsing logic, 
+        // but for now, we process the client-side result here.
 
+        // COPY OF PARSING LOGIC FOR CLIENT SIDE SUCCESS WITHOUT BOT BLOCK
         const pageData: PageData = {
             url,
             status: response.status,
@@ -71,7 +123,7 @@ export async function crawlPageClientSide(url: string, rules: any = []): Promise
                 wordCount: 0,
                 canonical: '',
                 metaRobots: '',
-                xRobotsTag: '', // Hard to get via proxy usually
+                xRobotsTag: '',
                 hreflang: [],
                 relNext: '',
                 relPrev: '',
@@ -151,37 +203,46 @@ export async function crawlPageClientSide(url: string, rules: any = []): Promise
 
             // --- Comprehensive Issue Detection ---
             // Response Codes
-            if (response.status >= 400) pageData.issues.push(`Response Codes: Internal Client Error (${response.status})`);
+            if (response.status >= 400) pageData.issues.push({
+                type: 'error',
+                message: `Response Codes: Internal Client Error (${response.status})`,
+                code: 'HTTP-ERR'
+            });
 
             // Page Titles
-            if (!pageData.details.title) pageData.issues.push('Page Titles: Missing');
+            if (!pageData.details.title) pageData.issues.push({ type: 'error', message: 'Page Titles: Missing', code: 'TITLE-MISS' });
             else {
-                if (pageData.details.title.length > 60) pageData.issues.push('Page Titles: Over 60 Characters');
-                if (pageData.details.title.length < 30) pageData.issues.push('Page Titles: Under 30 Characters');
+                if (pageData.details.title.length > 60) pageData.issues.push({ type: 'warning', message: 'Page Titles: Over 60 Characters', code: 'TITLE-LONG' });
+                if (pageData.details.title.length < 30) pageData.issues.push({ type: 'warning', message: 'Page Titles: Under 30 Characters', code: 'TITLE-SHORT' });
             }
 
             // Meta Descriptions
-            if (!pageData.details.description) pageData.issues.push('Meta Description: Missing');
+            if (!pageData.details.description) pageData.issues.push({ type: 'warning', message: 'Meta Description: Missing', code: 'DESC-MISS' });
             else {
-                if (pageData.details.description.length > 155) pageData.issues.push('Meta Description: Over 155 Characters');
-                if (pageData.details.description.length < 70) pageData.issues.push('Meta Description: Under 70 Characters');
+                if (pageData.details.description.length > 155) pageData.issues.push({ type: 'info', message: 'Meta Description: Over 155 Characters', code: 'DESC-LONG' });
+                if (pageData.details.description.length < 70) pageData.issues.push({ type: 'info', message: 'Meta Description: Under 70 Characters', code: 'DESC-SHORT' });
             }
 
             // H1
-            if (!pageData.details.h1) pageData.issues.push('H1: Missing');
-            if ($('h1').length > 1) pageData.issues.push('H1: Multiple');
-            if (pageData.details.h1 && pageData.details.h1 === pageData.details.title) pageData.issues.push('H1: Duplicate of Page Title');
+            if (!pageData.details.h1) pageData.issues.push({ type: 'error', message: 'H1: Missing', code: 'H1-MISS' });
+            if ($('h1').length > 1) pageData.issues.push({ type: 'error', message: 'H1: Multiple', code: 'H1-MULT' });
+            if (pageData.details.h1 && pageData.details.h1 === pageData.details.title) pageData.issues.push({ type: 'warning', message: 'H1: Duplicate of Page Title', code: 'H1-DUP-TITLE' });
 
             // H2
-            if (pageData.details.h2.length === 0) pageData.issues.push('H2: Missing');
-            if (pageData.details.h2.length > 20) pageData.issues.push('H2: Multiple (High Count)');
+            if (pageData.details.h2.length === 0) pageData.issues.push({ type: 'info', message: 'H2: Missing', code: 'H2-MISS' });
+            if (pageData.details.h2.length > 20) pageData.issues.push({ type: 'warning', message: 'H2: Multiple (High Count)', code: 'H2-MULT' });
 
             // Canonicals
-            if (!pageData.details.canonical) pageData.issues.push('Canonicals: Missing');
+            if (!pageData.details.canonical) pageData.issues.push({ type: 'error', message: 'Canonicals: Missing', code: 'CAN-MISS' });
 
             // Content
-            if (pageData.details.wordCount < 300) pageData.issues.push('Content: Thin Content (< 300 words)');
-            if (pageData.details.h2.length > 0 && !pageData.details.h1) pageData.issues.push('Headings: H2 with Missing H1');
+            if (pageData.details.wordCount < 300) pageData.issues.push({ type: 'warning', message: 'Content: Thin Content (< 300 words)', code: 'CONT-THIN' });
+            if (pageData.details.h2.length > 0 && !pageData.details.h1) pageData.issues.push({ type: 'error', message: 'Headings: H2 with Missing H1', code: 'HEAD-ORDER' });
+
+            // Schema / Structured Data
+            if (pageData.details.structuredData.length === 0) {
+                pageData.issues.push({ type: 'info', message: 'Schema: Missing Structured Data', code: 'SCHEMA-MISS' });
+            }
 
             // --- Images ---
             $('img').each((_, el) => {
@@ -196,21 +257,31 @@ export async function crawlPageClientSide(url: string, rules: any = []): Promise
                         pageData.assets.push({ url: abs, type: 'image', alt: alt || '' });
                     } catch { }
 
-                    if (!alt) pageData.issues.push('Images: Missing Alt Text');
-                    if (!width || !height) pageData.issues.push('Images: Missing Size Attributes');
+                    if (!alt && !pageData.issues.some(i => i.message === 'Images: Missing Alt Text')) {
+                        pageData.issues.push({ type: 'warning', message: 'Images: Missing Alt Text', code: 'IMG-ALT' });
+                    }
+                    if ((!width || !height) && !pageData.issues.some(i => i.message === 'Images: Missing Size Attributes')) {
+                        pageData.issues.push({ type: 'info', message: 'Images: Missing Size Attributes', code: 'IMG-SIZE' });
+                    }
                 }
             });
 
             // --- Internal Link Extraction ---
             $('a').each((_, el) => {
                 const href = $(el).attr('href');
-                if (href) {
+                if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
                     try {
                         const absUrl = new URL(href, url).href;
                         if (absUrl.startsWith('http')) {
-                            const isInternal = new URL(absUrl).hostname === targetUrl.hostname;
+                            const linkUrl = new URL(absUrl);
+                            const cleanUrl = linkUrl.origin + linkUrl.pathname + linkUrl.search;
+
+                            const isInternal = linkUrl.hostname === targetUrl.hostname ||
+                                linkUrl.hostname.endsWith('.' + targetUrl.hostname) ||
+                                targetUrl.hostname.endsWith('.' + linkUrl.hostname);
+
                             pageData.links.push({
-                                url: absUrl,
+                                url: cleanUrl,
                                 type: isInternal ? 'internal' : 'external'
                             });
                         }
@@ -222,18 +293,9 @@ export async function crawlPageClientSide(url: string, rules: any = []): Promise
         return pageData;
 
     } catch (error: any) {
-        console.error("Crawl Error", error);
-        return {
-            url, status: 0,
-            contentType: '', size: 0, time: 0,
-            links: [], assets: [],
-            details: {
-                title: '', description: '', h1: '', h2: [], wordCount: 0,
-                canonical: '', metaRobots: '', xRobotsTag: '',
-                hreflang: [], relNext: '', relPrev: '', amphtml: '', structuredData: []
-            },
-            customData: {},
-            issues: ['Connection Failed']
-        };
+        // If everything failed, try one last desperation server crawl if we haven't already
+        // (Though the catch block for fetchWithRetry handles most cases, this catches other logic errors)
+        console.error("Client Crawl Error, trying Server Fallback", error);
+        return await crawlViaServer(url, rules);
     }
 }
