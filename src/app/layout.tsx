@@ -3,8 +3,14 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SpiderFrog Online - SEO Spider",
-  description: "Advanced Online SEO Crawler and Analyzer",
+  title: "SpiderFrog Online | Technical SEO Spider & Website Crawler",
+  description: "Free online SEO crawler for technical audits. Analyze HTTP headers, JavaScript rendering, internal linking, and Core Web Vitals without installation.",
+  keywords: "seo spider, website crawler, technical seo audit, javascript seo, core web vitals, dom analysis, http headers",
+  openGraph: {
+    title: "SpiderFrog Online - Technical SEO Scanner",
+    description: "Deep-dive technical SEO analysis for modern React/Next.js websites.",
+    type: "website",
+  }
 };
 
 export default function RootLayout({

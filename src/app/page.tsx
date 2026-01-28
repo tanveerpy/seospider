@@ -71,7 +71,7 @@ export default function LandingPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              SEO Spider v2.4 - Stable Release
+              SEO Spider v2.4 - Technical Audit Tool
             </div>
 
             <h1 className="text-7xl md:text-9xl font-black tracking-tighter leading-[0.9] mb-12 italic text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-slate-500 drop-shadow-2xl">
@@ -80,8 +80,9 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-16 font-medium">
-              The high-precision SEO crawler for web professionals. Detect issues,
-              analyze internal links, and optimize your site via one powerful interface.
+              The advanced <strong>Technical SEO Crawler</strong> for modern web applications.
+              Analyze <strong>JavaScript rendering</strong>, detect <strong>HTTP header</strong> issues,
+              and optimize <strong>internal linking structures</strong> with a neural-powered auditing engine.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6">
@@ -93,7 +94,7 @@ export default function LandingPage() {
               </Link>
               <button className="px-12 py-5 bg-white/5 border border-white/10 text-white rounded-3xl text-sm font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
                 <Terminal size={18} />
-                User Documentation
+                View Capabilities
               </button>
             </div>
           </motion.div>
@@ -156,23 +157,52 @@ export default function LandingPage() {
       </section>
 
       {/* --- FEATURES GRID --- */}
-      <section className="py-40 container mx-auto px-10 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="py-20 container mx-auto px-10 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
           <FeatureCard
             icon={Fingerprint}
-            title="SEO Intelligence"
-            desc="Automatically identify structural issues and metadata gaps across your entire website."
+            title="Structural Intelligence"
+            desc="Automatically identify hierarchy issues, orphan pages, and deep structure gaps across your entire website architecture."
           />
           <FeatureCard
             icon={Activity}
-            title="Performance Audit"
-            desc="Analyze page load speeds and identify bottlenecks to improve your search rankings."
+            title="Core Web Audit"
+            desc="Analyze LCP, CLS, and TBT metrics with lab-grade precision to identify performance bottlenecks affecting rank."
           />
           <FeatureCard
             icon={Shield}
-            title="Health Check"
-            desc="Detect broken links, mixed content, and security vulnerabilities instantly."
+            title="Security Protocols"
+            desc="Detect mixed content, missing security headers, and expose potential vulnerabilities in your deployment pipeline."
           />
+        </div>
+
+        {/* --- NEW SEO CONTENT SECTION --- */}
+        <div className="max-w-4xl mx-auto text-center space-y-12">
+          <div>
+            <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white mb-6 uppercase">
+              Why Use a <span className="text-emerald-500">Technical SEO Spider</span>?
+            </h2>
+            <p className="text-slate-400 text-lg leading-relaxed">
+              In the era of JavaScript-heavy frameworks like Next.js and React, traditional text-based crawlers fail to see what search engines see.
+              <strong>SpiderFrog</strong> renders your pages using a headless browser engine, executing JavaScript to reveal the true state of your DOM,
+              ensuring your <strong>technical SEO audit</strong> is accurate and comprehensive.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+            <div className="p-8 rounded-3xl bg-white/5 border border-white/5">
+              <h3 className="text-xl font-bold text-white mb-3">JavaScript Rendering Analysis</h3>
+              <p className="text-slate-500 text-sm">
+                Don't let client-side rendering hide your content. Our <strong>JS SEO crawler</strong> executes code to find content gaps and hydration errors.
+              </p>
+            </div>
+            <div className="p-8 rounded-3xl bg-white/5 border border-white/5">
+              <h3 className="text-xl font-bold text-white mb-3">Internal Link Optimization</h3>
+              <p className="text-slate-500 text-sm">
+                Visualize your site architecture. Identify <strong>orphan pages</strong> and optimize <strong>link equity distribution</strong> to boost ranking potential.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
