@@ -35,7 +35,7 @@ export default function LandingPage() {
               <Terminal size={20} className="text-emerald-400" />
             </div>
             <span className="text-2xl font-black italic tracking-tighter uppercase">
-              Spider<span className="text-emerald-500 font-black">Frog</span>
+              Crawl<span className="text-emerald-500 font-black">Logic</span>
             </span>
           </div>
 
@@ -184,7 +184,7 @@ export default function LandingPage() {
             </h2>
             <p className="text-slate-400 text-lg leading-relaxed">
               In the era of JavaScript-heavy frameworks like Next.js and React, traditional text-based crawlers fail to see what search engines see.
-              <strong>SpiderFrog</strong> renders your pages using a headless browser engine, executing JavaScript to reveal the true state of your DOM,
+              <strong>CrawlLogic</strong> renders your pages using a headless browser engine, executing JavaScript to reveal the true state of your DOM,
               ensuring your <strong>technical SEO audit</strong> is accurate and comprehensive.
             </p>
           </div>
@@ -212,11 +212,11 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <Terminal size={20} className="text-emerald-500" />
             <span className="text-lg font-black italic tracking-tighter uppercase underline decoration-emerald-500 underline-offset-4 decoration-2">
-              SpiderFrog
+              CrawlLogic
             </span>
           </div>
-          <div className="text-slate-500 text-[10px] font-mono uppercase tracking-[0.2em]">
-            &copy; 2026 SpiderFrog. All rights reserved.
+          <div className="text-slate-500 text-xs font-mono uppercase tracking-[0.2em]">
+            &copy; 2026 CrawlLogic. All rights reserved.
           </div>
         </div>
       </footer>

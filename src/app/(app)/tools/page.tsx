@@ -80,7 +80,7 @@ export default function ToolsPage() {
                         <p className="text-slate-400 leading-relaxed">
                             Modern search engines like Google use complex rendering engines (WRS) to index JavaScript-heavy websites.
                             Traditional crawlers often miss hydration errors, client-side routing issues, and dynamic content.
-                            SpiderFrog's <strong>technical utility suite</strong> bridges this gap by simulating a real user agent environment.
+                            CrawlLogic's <strong>technical utility suite</strong> bridges this gap by simulating a real user agent environment.
                         </p>
                     </div>
                     <div>

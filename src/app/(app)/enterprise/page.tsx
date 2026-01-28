@@ -19,7 +19,8 @@ export default function EnterprisePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-8">
                     <p className="text-lg text-slate-300 leading-relaxed">
-                        SpiderFrog Enterprise is designed for organizations that need to crawl millions of pages, integrate deep data into their pipelines, or require dedicated support engineers.
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-500">CrawlLogic</span> Enterprise
+                        is designed for organizations that need to crawl millions of pages, integrate deep data into their pipelines, or require dedicated support engineers.
                     </p>
 
                     <ul className="space-y-4">

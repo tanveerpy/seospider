@@ -37,8 +37,7 @@ export default function ApiAccessPage() {
                     <code className="text-slate-300 font-mono text-sm">No authentication required for local instance</code>
                 </div>
                 <p className="text-xs text-slate-500">
-                    <Lock size={12} className="inline mr-1" />
-                    If deployed to production, ensure this route is protected or behind a firewall.
+                    <Lock size={12} className="inline mr-1" /> CrawlLogic can be integrated into your existing CI/CD pipelines to ensure every deploy is SEO-perfect.
                 </p>
             </div>
 
