@@ -40,9 +40,14 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden lg:flex items-center gap-12">
-            {['Engine', 'Documentation', 'Access API', 'Enterprise'].map((item) => (
-              <Link key={item} href="#" className="text-slate-400 hover:text-white text-xs font-black uppercase tracking-[0.2em] transition-all hover:tracking-[0.3em]">
-                {item}
+            {[
+              { name: 'Engine', href: '/engine' },
+              { name: 'Documentation', href: '/docs' },
+              { name: 'Access API', href: '/api-access' },
+              { name: 'Enterprise', href: '/enterprise' }
+            ].map((item) => (
+              <Link key={item.name} href={item.href} className="text-slate-400 hover:text-white text-xs font-black uppercase tracking-[0.2em] transition-all hover:tracking-[0.3em]">
+                {item.name}
               </Link>
             ))}
           </div>
@@ -92,10 +97,12 @@ export default function LandingPage() {
                   Start Crawling
                 </button>
               </Link>
-              <button className="px-12 py-5 bg-white/5 border border-white/10 text-white rounded-3xl text-sm font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
-                <Terminal size={18} />
-                View Capabilities
-              </button>
+              <Link href="/tools">
+                <button className="px-12 py-5 bg-white/5 border border-white/10 text-white rounded-3xl text-sm font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
+                  <Terminal size={18} />
+                  View Capabilities
+                </button>
+              </Link>
             </div>
           </motion.div>
 
