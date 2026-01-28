@@ -301,6 +301,37 @@ export async function POST(request: Request) {
                     } catch { }
                 }
             });
+
+            // --- Image Auditing (New Feature) ---
+            $('img').each((_, el) => {
+                const src = $(el).attr('src');
+                const alt = $(el).attr('alt') || '';
+
+                if (src) {
+                    const missingAlt = !$(el).attr('alt'); // True if attribute is completely missing
+
+                    pageData.assets.push({
+                        url: src,
+                        type: 'image',
+                        alt: alt,
+                        missingAlt: missingAlt
+                    });
+
+                    if (missingAlt) {
+                        pageData.issues.push({
+                            type: 'warning',
+                            message: 'Images: Missing Alt Text',
+                            code: 'IMG-NO-ALT'
+                        });
+                    } else if (alt.length > 100) {
+                        pageData.issues.push({
+                            type: 'info',
+                            message: 'Images: Alt Text Over 100 Chars',
+                            code: 'IMG-LONG-ALT'
+                        });
+                    }
+                }
+            });
         }
 
         // --- Performance Checks ---
