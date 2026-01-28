@@ -119,17 +119,21 @@ export default function RightSidebar({ activeTab: parentTab, setActiveTab: setPa
                         {!selectedIssue ? (
                             <>
                                 <div className="tree-header" style={{ background: '#fef2f2', color: '#dc2626' }}>Detected Issues</div>
-                                {Array.from(new Set(pageList.flatMap(p => p.issues))).map(issue => (
-                                    <TreeItem
-                                        key={issue}
-                                        label={issue}
-                                        count={pageList.filter(p => p.issues.includes(issue)).length}
-                                        onClick={() => {
-                                            setSelectedIssue(issue);
-                                            setFilter(() => (p: PageData) => p.issues?.includes(issue));
-                                        }}
-                                    />
-                                ))}
+                                {Array.from(new Set(pageList.flatMap(p => p.issues.map(i => i.code || i.message)))).map(code => {
+                                    const issueObj = pageList.flatMap(p => p.issues).find(i => (i.code || i.message) === code);
+                                    const label = issueObj?.message || code;
+                                    return (
+                                        <TreeItem
+                                            key={code}
+                                            label={label}
+                                            count={pageList.filter(p => p.issues.some(i => (i.code || i.message) === code)).length}
+                                            onClick={() => {
+                                                setSelectedIssue(code);
+                                                setFilter(() => (p: PageData) => p.issues?.some(i => (i.code || i.message) === code));
+                                            }}
+                                        />
+                                    );
+                                })}
                                 {pageList.flatMap(p => p.issues).length === 0 && <div style={{ padding: '16px', color: '#999', textAlign: 'center', fontSize: '12px' }}>No issues found.</div>}
                             </>
                         ) : (
@@ -164,7 +168,7 @@ export default function RightSidebar({ activeTab: parentTab, setActiveTab: setPa
                                         </div>
 
                                         <div style={{ marginTop: '24px', fontSize: '12px', color: '#666' }}>
-                                            <b>Affected URLs:</b> {pageList.filter(p => p.issues.includes(selectedIssue)).length}
+                                            <b>Affected URLs:</b> {pageList.filter(p => p.issues.some(i => (i.code || i.message) === selectedIssue)).length}
                                         </div>
                                     </div>
                                 ) : (

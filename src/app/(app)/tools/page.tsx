@@ -4,13 +4,10 @@ import React from 'react';
 import {
     Wrench,
     Terminal,
-    Code2,
     Cpu,
     ShieldCheck,
     Zap,
     ArrowRight,
-    CommandLine,
-    Settings,
     Boxes
 } from 'lucide-react';
 import { motion } from 'framer-motion';
