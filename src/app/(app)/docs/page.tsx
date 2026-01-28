@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { BookOpen, FileText, Code, Globe } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DocsPage() {
     return (
@@ -17,7 +18,7 @@ export default function DocsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <a href="#" className="group glass-card p-8 rounded-[32px] hover:bg-white/5 transition-all">
+                <Link href="/docs/quick-start" className="group glass-card p-8 rounded-[32px] hover:bg-white/5 transition-all">
                     <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6">
                         <FileText className="text-blue-400" size={24} />
                     </div>
@@ -25,9 +26,9 @@ export default function DocsPage() {
                     <p className="text-slate-500 text-sm leading-relaxed">
                         Learn how to set up your first crawl, configure exclusions, and interpret the initial audit report.
                     </p>
-                </a>
+                </Link>
 
-                <a href="#" className="group glass-card p-8 rounded-[32px] hover:bg-white/5 transition-all">
+                <Link href="/docs/extraction-rules" className="group glass-card p-8 rounded-[32px] hover:bg-white/5 transition-all">
                     <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6">
                         <Code className="text-purple-400" size={24} />
                     </div>
@@ -35,9 +36,9 @@ export default function DocsPage() {
                     <p className="text-slate-500 text-sm leading-relaxed">
                         Master CSS Selectors and Regex to extract custom data points like prices, SKUs, and meta tags.
                     </p>
-                </a>
+                </Link>
 
-                <a href="#" className="group glass-card p-8 rounded-[32px] hover:bg-white/5 transition-all">
+                <Link href="/docs/headless-rendering" className="group glass-card p-8 rounded-[32px] hover:bg-white/5 transition-all">
                     <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6">
                         <Globe className="text-emerald-400" size={24} />
                     </div>
@@ -45,7 +46,7 @@ export default function DocsPage() {
                     <p className="text-slate-500 text-sm leading-relaxed">
                         Understanding how the JavaScript renderer works, and optimizing your site for dynamic rendering.
                     </p>
-                </a>
+                </Link>
             </div>
 
             <div className="glass-card p-10 rounded-[32px] border border-white/5 bg-gradient-to-br from-white/5 to-transparent">
