@@ -24,20 +24,34 @@ export default function ApiAccessPage() {
                             <Key className="text-emerald-400" size={24} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-white">Public Access</h3>
-                            <p className="text-slate-500 text-xs">Environment: Local / Self-Hosted</p>
+                            <h3 className="text-lg font-bold text-white">API Credentials</h3>
+                            <p className="text-slate-500 text-xs">Environment: Development</p>
                         </div>
                     </div>
                     <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-[10px] font-black text-emerald-500 uppercase tracking-widest">
-                        Open
+                        Active
                     </div>
                 </div>
 
-                <div className="bg-black/40 border border-white/5 p-4 rounded-xl flex items-center justify-between mb-4">
-                    <code className="text-slate-300 font-mono text-sm">No authentication required for local instance</code>
+                <div className="space-y-4">
+                    <div>
+                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Public Key</div>
+                        <div className="bg-black/40 border border-white/5 p-4 rounded-xl flex items-center justify-between group cursor-pointer hover:border-emerald-500/30 transition-colors">
+                            <code className="text-emerald-400 font-mono text-sm">pk_live_sf_9x8e7d6c5b4a3</code>
+                            <Copy size={14} className="text-slate-600 group-hover:text-white transition-colors" />
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Secret Key</div>
+                        <div className="bg-black/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+                            <code className="text-slate-500 font-mono text-sm">****************************</code>
+                            <button className="text-[10px] uppercase font-bold text-slate-400 hover:text-white">Reveal</button>
+                        </div>
+                    </div>
                 </div>
-                <p className="text-xs text-slate-500">
-                    <Lock size={12} className="inline mr-1" /> CrawlLogic can be integrated into your existing CI/CD pipelines to ensure every deploy is SEO-perfect.
+
+                <p className="text-xs text-slate-500 mt-6">
+                    <Lock size={12} className="inline mr-1" /> keys are scoped to <code className="text-slate-300">localhost</code> by default. Configure CORS in settings for remote access.
                 </p>
             </div>
 
