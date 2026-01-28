@@ -11,13 +11,15 @@ import {
     Boxes
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function ToolsPage() {
     const tools = [
-        { name: 'Neural Header Scan', desc: 'Deep inspection of HTTP response headers for security and performance leaks.', icon: ShieldCheck, status: 'Online' },
-        { name: 'DOM Fragmentation', desc: 'Identify hydration errors and oversized DOM nodes in React/Next.js environments.', icon: Boxes, status: 'Online' },
-        { name: 'Equity Pulse', icon: Zap, desc: 'Real-time monitoring of internal link weights and PageRank distribution.', status: 'Active' },
-        { name: 'Core Vital Vector', icon: Cpu, desc: 'Synthetic LCP/CLS measurement via headless Chromium instances.', status: 'Ready' },
+        { name: 'Neural Header Scan', desc: 'Deep inspection of HTTP response headers for security and performance leaks.', icon: ShieldCheck, status: 'Online', link: '/tools/header-analyzer' },
+        { name: 'DOM Fragmentation', desc: 'Identify hydration errors and oversized DOM nodes in React/Next.js environments.', icon: Boxes, status: 'Online', link: '/tools/dom-analyzer' },
+        { name: 'Meta Tag Gen', icon: Zap, desc: 'Generate optimized meta tags for social sharing and search engines.', status: 'Active', link: '/tools/meta-tag-generator' },
+        { name: 'Schema Builder', icon: Cpu, desc: 'Create JSON-LD structural markup for rich snippets.', status: 'Ready', link: '/tools/schema-generator' },
+        { name: 'Robots.txt Gen', icon: Terminal, desc: 'Configure crawl rules for search engine bots.', status: 'Online', link: '/tools/robots-txt-generator' },
     ];
 
     return (
@@ -38,37 +40,38 @@ export default function ToolsPage() {
             {/* --- TOOLS GRID --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {tools.map((tool, idx) => (
-                    <motion.div
-                        whileHover={{ y: -5 }}
-                        key={idx}
-                        className="glass-card p-10 rounded-[40px] group relative overflow-hidden"
-                    >
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <tool.icon size={100} strokeWidth={1} />
-                        </div>
-
-                        <div className="relative">
-                            <div className="flex items-center justify-between mb-8">
-                                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-500 group-hover:text-emerald-400 group-hover:border-emerald-500/20 transition-all">
-                                    <tool.icon size={28} />
-                                </div>
-                                <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-[10px] font-black text-emerald-500 uppercase tracking-widest italic animate-pulse">
-                                    {tool.status}
-                                </div>
+                    <Link key={idx} href={tool.link || '#'}>
+                        <motion.div
+                            whileHover={{ y: -5 }}
+                            className="glass-card p-10 rounded-[40px] group relative overflow-hidden h-full"
+                        >
+                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <tool.icon size={100} strokeWidth={1} />
                             </div>
 
-                            <h3 className="text-2xl font-black italic text-white mb-4 uppercase tracking-tight group-hover:text-emerald-500 transition-colors">
-                                {tool.name}
-                            </h3>
-                            <p className="text-slate-500 font-medium leading-relaxed mb-8 max-w-sm">
-                                {tool.desc}
-                            </p>
+                            <div className="relative">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-500 group-hover:text-emerald-400 group-hover:border-emerald-500/20 transition-all">
+                                        <tool.icon size={28} />
+                                    </div>
+                                    <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-[10px] font-black text-emerald-500 uppercase tracking-widest italic animate-pulse">
+                                        {tool.status}
+                                    </div>
+                                </div>
 
-                            <button className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 group-hover:gap-5 transition-all">
-                                Initialize Module <ArrowRight size={14} />
-                            </button>
-                        </div>
-                    </motion.div>
+                                <h3 className="text-2xl font-black italic text-white mb-4 uppercase tracking-tight group-hover:text-emerald-500 transition-colors">
+                                    {tool.name}
+                                </h3>
+                                <p className="text-slate-500 font-medium leading-relaxed mb-8 max-w-sm">
+                                    {tool.desc}
+                                </p>
+
+                                <button className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 group-hover:gap-5 transition-all">
+                                    Initialize Module <ArrowRight size={14} />
+                                </button>
+                            </div>
+                        </motion.div>
+                    </Link>
                 ))}
             </div>
 
