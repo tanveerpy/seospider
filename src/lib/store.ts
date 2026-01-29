@@ -24,7 +24,9 @@ export interface PageData {
     assets: { url: string; type: 'image' | 'css' | 'javascript'; alt?: string; missingAlt?: boolean }[];
     details: {
         title: string;
+        titlePixelWidth?: number;
         description: string;
+        descriptionPixelWidth?: number;
         h1: string;
         h2: string[];
         wordCount: number;

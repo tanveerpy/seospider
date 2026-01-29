@@ -1,7 +1,89 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import { PageData } from './store';
+import { calculatePixelWidth } from './seo-utils';
 
+// ... (Existing Imports)
+
+// ... (Inside crawlPageClientSide function, after parsing metatags) ...
+
+// --- Metadata ---
+const title = $('title').text().trim() || '';
+const description = $('meta[name="description"]').attr('content') || '';
+
+pageData.details.title = title;
+pageData.details.titlePixelWidth = calculatePixelWidth(title);
+
+pageData.details.description = description;
+pageData.details.descriptionPixelWidth = calculatePixelWidth(description);
+
+pageData.details.h1 = $('h1').first().text().trim() || '';
+
+// ... (Existing H2, Canonical extraction) ...
+
+// --- Custom Extraction Execution ---
+if (rules && Array.isArray(rules)) {
+    // ... (Existing Custom Extraction Logic)
+}
+
+// --- Comprehensive Issue Detection ---
+// Response Codes
+if (response.status >= 400) pageData.issues.push({
+    type: 'error',
+    message: `Response Codes: Internal Client Error (${response.status})`,
+    code: 'HTTP-ERR'
+});
+
+// --- Security Headers Audit ---
+const headers = response.headers || {};
+const getHeader = (name: string) => headers[name] || headers[name.toLowerCase()];
+
+if (!getHeader('Strict-Transport-Security') && !getHeader('strict-transport-security')) {
+    pageData.issues.push({ type: 'warning', message: 'Security: Missing HSTS Header', code: 'SEC-MISS-HSTS' });
+}
+if (!getHeader('Content-Security-Policy') && !getHeader('content-security-policy')) {
+    pageData.issues.push({ type: 'info', message: 'Security: Missing Content-Security-Policy Header', code: 'SEC-MISS-CSP' });
+}
+if (!getHeader('X-Frame-Options') && !getHeader('x-frame-options')) {
+    pageData.issues.push({ type: 'info', message: 'Security: Missing X-Frame-Options Header', code: 'SEC-MISS-XFRAME' });
+}
+if (!getHeader('X-Content-Type-Options') && !getHeader('x-content-type-options')) {
+    pageData.issues.push({ type: 'info', message: 'Security: Missing X-Content-Type-Options Header', code: 'SEC-MISS-CTYPE' });
+}
+if (!getHeader('Referrer-Policy') && !getHeader('referrer-policy')) {
+    pageData.issues.push({ type: 'info', message: 'Security: Missing Secure Referrer-Policy Header', code: 'SEC-MISS-REF' });
+}
+
+// Page Titles (Updated with Pixel Width)
+if (!pageData.details.title) pageData.issues.push({ type: 'error', message: 'Page Titles: Missing', code: 'TITLE-MISS' });
+else {
+    if (pageData.details.title.length > 60) pageData.issues.push({ type: 'warning', message: 'Page Titles: Over 60 Characters', code: 'TITLE-LONG' });
+    if (pageData.details.title.length < 30) pageData.issues.push({ type: 'warning', message: 'Page Titles: Under 30 Characters', code: 'TITLE-SHORT' });
+
+    // Pixel Width Checks
+    if (pageData.details.titlePixelWidth && pageData.details.titlePixelWidth > 580) {
+        pageData.issues.push({ type: 'warning', message: 'Page Titles: Over 580 Pixels (Truncated)', code: 'TITLE-PIX-LONG' });
+    }
+    if (pageData.details.titlePixelWidth && pageData.details.titlePixelWidth < 200) {
+        pageData.issues.push({ type: 'info', message: 'Page Titles: Under 200 Pixels', code: 'TITLE-PIX-SHORT' });
+    }
+}
+
+// Meta Descriptions
+if (!pageData.details.description) pageData.issues.push({ type: 'warning', message: 'Meta Description: Missing', code: 'DESC-MISS' });
+else {
+    if (pageData.details.description.length > 155) pageData.issues.push({ type: 'info', message: 'Meta Description: Over 155 Characters', code: 'DESC-LONG' });
+    if (pageData.details.description.length < 70) pageData.issues.push({ type: 'info', message: 'Meta Description: Under 70 Characters', code: 'DESC-SHORT' });
+
+    // Pixel Width Checks for Description (approx 920px max on desktop, but SF uses ~985 often)
+    if (pageData.details.descriptionPixelWidth && pageData.details.descriptionPixelWidth > 990) {
+        pageData.issues.push({ type: 'info', message: 'Meta Description: Over 990 Pixels', code: 'DESC-PIX-LONG' });
+    }
+}
+
+// H1
+if (!pageData.details.h1) pageData.issues.push({ type: 'error', message: 'H1: Missing', code: 'H1-MISS' });
+if ($('h1').length > 1) pageData.issues.push({ type: 'error', message: 'H1: Multiple', code: 'H1-MULT' });
+if (pageData.details.h1 && pageData.details.h1 === pageData.details.title) pageData.issues.push({ type: 'warning', message: 'H1: Duplicate of Page Title', code: 'H1-DUP-TITLE' });
+
+// ... (Remainder of existing checks: H2, Canonicals, Content, Schema, Images, Links) ...
 // List of reliable CORS Proxies to try in round-robin or fallback order
 const CORS_PROXIES = [
     (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,

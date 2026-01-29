@@ -1,8 +1,54 @@
-import { NextResponse } from 'next/server';
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import puppeteer from 'puppeteer';
+import { calculatePixelWidth } from '@/lib/seo-utils';
 
+// ... (Existing Imports)
+
+// ...
+
+// --- Issue Mapping ---
+
+// --- Security Headers Audit ---
+const headers = response.headers || {};
+const getHeader = (name: string) => headers[name] || headers[name.toLowerCase()];
+
+if (!getHeader('Strict-Transport-Security') && !getHeader('strict-transport-security')) {
+    pageData.issues.push({ type: 'warning', message: 'Security: Missing HSTS Header', code: 'SEC-MISS-HSTS' });
+}
+if (!getHeader('Content-Security-Policy') && !getHeader('content-security-policy')) {
+    pageData.issues.push({ type: 'info', message: 'Security: Missing Content-Security-Policy Header', code: 'SEC-MISS-CSP' });
+}
+if (!getHeader('X-Frame-Options') && !getHeader('x-frame-options')) {
+    pageData.issues.push({ type: 'info', message: 'Security: Missing X-Frame-Options Header', code: 'SEC-MISS-XFRAME' });
+}
+if (!getHeader('X-Content-Type-Options') && !getHeader('x-content-type-options')) {
+    pageData.issues.push({ type: 'info', message: 'Security: Missing X-Content-Type-Options Header', code: 'SEC-MISS-CTYPE' });
+}
+if (!getHeader('Referrer-Policy') && !getHeader('referrer-policy')) {
+    pageData.issues.push({ type: 'info', message: 'Security: Missing Secure Referrer-Policy Header', code: 'SEC-MISS-REF' });
+}
+
+// Page Titles
+if (!pageData.details.title) pageData.issues.push({ type: 'error', message: 'Page Titles: Missing', code: 'TITLE-MISS' });
+else {
+    pageData.details.titlePixelWidth = calculatePixelWidth(pageData.details.title);
+
+    if (pageData.details.title.length > 60) pageData.issues.push({ type: 'warning', message: 'Page Titles: Over 60 Characters', code: 'TITLE-LONG' });
+    if (pageData.details.title.length < 30) pageData.issues.push({ type: 'warning', message: 'Page Titles: Under 30 Characters', code: 'TITLE-SHORT' });
+
+    if (pageData.details.titlePixelWidth > 580) {
+        pageData.issues.push({ type: 'warning', message: 'Page Titles: Over 580 Pixels (Truncated)', code: 'TITLE-PIX-LONG' });
+    }
+    if (pageData.details.titlePixelWidth < 200) {
+        pageData.issues.push({ type: 'info', message: 'Page Titles: Under 200 Pixels', code: 'TITLE-PIX-SHORT' });
+    }
+}
+
+// Meta Descriptions Pixel Width
+if (pageData.details.description) {
+    pageData.details.descriptionPixelWidth = calculatePixelWidth(pageData.details.description);
+    if (pageData.details.descriptionPixelWidth > 990) {
+        pageData.issues.push({ type: 'info', message: 'Meta Description: Over 990 Pixels', code: 'DESC-PIX-LONG' });
+    }
+}
 // Note: Removed puppeteer-extra-plugin-stealth due to "utils.typeOf is not a function" runtime error in this env.
 // We will rely on manual stealth techniques (UA, headers, args) which are robust enough for most cases.
 
