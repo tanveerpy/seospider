@@ -1,8 +1,8 @@
 import { calculatePixelWidth } from '@/lib/seo-utils';
-
-// ... (Existing Imports)
-
-// ...
+import { NextResponse } from 'next/server';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import puppeteer from 'puppeteer';
 
 
 // Note: Removed puppeteer-extra-plugin-stealth due to "utils.typeOf is not a function" runtime error in this env.
