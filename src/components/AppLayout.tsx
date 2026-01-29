@@ -47,8 +47,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                 // --- RETRY LOGIC (Bot Block / Network Fail) ---
                 // If client-side proxy fails or gets blocked, try Server-Side API (Puppeteer)
-                const isBlocked = data?.issues.some(i => i.code === 'BOT-BLOCK');
-                const isFailed = !data || data.status === 0 || data.issues.some(i => i.code === 'CONN-FAIL');
+                const isBlocked = data?.issues.some((i: any) => i.code === 'BOT-BLOCK');
+                const isFailed = !data || data.status === 0 || data.issues.some((i: any) => i.code === 'CONN-FAIL');
 
                 if (isBlocked || isFailed) {
                     console.info(`[SF-RETRY] ${isBlocked ? 'Bot Block' : 'Connection Failure'} detected on ${nextUrl}. Retrying via Server-Side API...`);
