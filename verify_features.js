@@ -32,9 +32,16 @@ async function verify() {
     console.log(`Verifying features on ${url}...`);
 
     try {
-        const response = await axios.get(url);
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+            }
+        });
         const html = response.data;
         const $ = cheerio.load(html);
+
+        console.log(`HTML Size: ${html.length} bytes`);
+        console.log(`Image Tags found: ${$('img').length}`);
 
         // 1. Pixel Width Verification
         const title = $('title').text().trim();
@@ -76,6 +83,26 @@ async function verify() {
             console.log(`✅ Gap Fill Verified: Audit detected ${missingCount} missing security headers (Logic is working).`);
         } else {
             console.log("ℹ️  No missing headers found (Site might be secure, or logic mismatch).");
+        }
+
+        // 3. Image Size Logic Verification (Feasibility Check)
+        console.log(`\n[Image Size Feasibility Check]`);
+        const img = $('img').first().attr('src');
+        if (img) {
+            try {
+                const absUrl = new URL(img, url).href;
+                console.log(`Testing HEAD request on: ${absUrl}`);
+                const headRes = await axios.head(absUrl);
+                const size = headRes.headers['content-length'];
+                console.log(`Content-Length: ${size} bytes`);
+
+                if (size) console.log("✅ Image Size: HEAD Request successful.");
+                else console.log("⚠️  Image Size: No content-length returned.");
+            } catch (e) {
+                console.log(`❌ Image Size Check Failed: ${e.message}`);
+            }
+        } else {
+            console.log("ℹ️  No images found on page to test.");
         }
 
     } catch (e) {
