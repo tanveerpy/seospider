@@ -19,20 +19,45 @@ import {
     Zap,
     User,
     BookOpen,
-    Building2
+    Building2,
+    Cloud
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ConfigModal from '@/components/ConfigModal';
 import { crawlPageClientSide } from '@/lib/clientCrawler';
+import { dispatchCrawlJob, checkCrawlResult } from '@/lib/github-api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { isCrawling, startCrawl, stopCrawl, pages, queue, popQueue, addPage, addToQueue } = useCrawlerStore();
     const [urlInput, setUrlInput] = useState('https://writeoffcalc.com');
     const [showConfig, setShowConfig] = useState(false);
+    const [cloudMode, setCloudMode] = useState(false);
     const pathname = usePathname();
     const workerRef = useRef<boolean>(false);
+
+    // --- Cloud Polling Effect ---
+    useEffect(() => {
+        const pollInterval = setInterval(async () => {
+            const { remoteJobs, updateRemoteJob, addPage } = useCrawlerStore.getState();
+            Object.entries(remoteJobs).forEach(async ([jobId, job]) => {
+                if (job.status === 'queued' || job.status === 'processing') {
+                    const result = await checkCrawlResult(jobId);
+                    if (result) {
+                        if ((result as any).error) { // Check for error object
+                            updateRemoteJob(jobId, 'failed');
+                        } else {
+                            addPage(result);
+                            updateRemoteJob(jobId, 'completed');
+                        }
+                    }
+                }
+            });
+        }, 5000); // Poll every 5s
+
+        return () => clearInterval(pollInterval);
+    }, []);
 
     // --- Persistent Crawl Engine ---
     const processQueue = React.useCallback(async () => {
@@ -228,7 +253,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         </div>
 
                         {/* Controls */}
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 items-center">
+                            {/* Cloud Toggle */}
+                            <button
+                                onClick={() => setCloudMode(!cloudMode)}
+                                className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 border transition-all ${cloudMode
+                                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                        : 'bg-white/5 text-slate-500 border-transparent hover:text-white'
+                                    }`}
+                                title="Run via GitHub Actions (Serverless)"
+                            >
+                                <Cloud size={14} />
+                                {cloudMode ? 'Cloud' : 'Local'}
+                            </button>
                             {isCrawling ? (
                                 <button
                                     className="flex items-center gap-2.5 px-6 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
@@ -239,16 +276,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             ) : (
                                 <button
                                     className="flex items-center gap-2.5 px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] group hover:scale-[1.02] active:scale-[0.98]"
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (!urlInput.trim() || !/^https?:\/\/.+/.test(urlInput)) {
                                             alert('Please enter a valid URL (http/https).');
                                             return;
                                         }
-                                        startCrawl(urlInput);
+
+                                        if (cloudMode) {
+                                            try {
+                                                const jobId = await dispatchCrawlJob(urlInput);
+                                                useCrawlerStore.getState().addRemoteJob(jobId, urlInput);
+                                                alert(`Cloud Crawl Started! Job ID: ${jobId}. Results will appear shortly.`);
+                                            } catch (e: any) {
+                                                alert(`Cloud Dispatch Failed: ${e.message}`);
+                                            }
+                                        } else {
+                                            startCrawl(urlInput);
+                                        }
                                     }}
                                 >
                                     <Zap size={16} className="fill-black group-hover:scale-110 transition-transform" />
-                                    Start Crawl
+                                    {cloudMode ? 'Dispatch Cloud' : 'Start Crawl'}
                                 </button>
                             )}
                         </div>

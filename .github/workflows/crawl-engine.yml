@@ -1,0 +1,51 @@
+name: CrawlLogic Engine
+
+on:
+  repository_dispatch:
+    types: [start-crawl]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Target URL to crawl'
+        required: true
+      job_id:
+        description: 'Unique Job ID'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Browsers (Puppeteer)
+        run: npx puppeteer browsers install chrome
+
+      - name: Execute Headless Crawl
+        env:
+          TARGET_URL: ${{ github.event.client_payload.url || inputs.url }}
+          JOB_ID: ${{ github.event.client_payload.job_id || inputs.job_id }}
+        run: npx tsx src/scripts/headless-crawler.ts
+
+      - name: Commit Results
+        run: |
+          git config --global user.name "CrawlLogic Bot"
+          git config --global user.email "bot@crawllogic.sh"
+          git add data/crawls/
+          git commit -m "Crawl Result: ${{ github.event.client_payload.url || inputs.url }}"
+          git push

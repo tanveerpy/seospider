@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useCrawlerStore } from '@/lib/store';
 import { v4 as uuidv4 } from 'uuid';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, HelpCircle, Save, Cloud } from 'lucide-react';
 import clsx from 'clsx';
 
 export default function ConfigModal({ onClose }: { onClose: () => void }) {

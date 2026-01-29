@@ -49,14 +49,25 @@ interface CrawlerState {
     processed: Set<string>;
     isCrawling: boolean;
     rootDomain: string;
-    extractionRules: ExtractionRule[];
+
+    // --- Async / Remote Crawl State ---
+    remoteJobs: { [jobId: string]: { url: string; status: 'queued' | 'processing' | 'completed' | 'failed'; startTime: number } };
+    githubToken: string;
+
+    setGithubToken: (token: string) => void;
+    addRemoteJob: (jobId: string, url: string) => void;
+    updateRemoteJob: (jobId: string, status: 'queued' | 'processing' | 'completed' | 'failed') => void;
 
     // Actions
-    startCrawl: (url: string) => void;
-    stopCrawl: () => void;
     addPage: (page: PageData) => void;
     addToQueue: (urls: string[]) => void;
     popQueue: () => string | undefined;
+    startCrawl: (url: string) => void;
+    stopCrawl: () => void;
+    reset: () => void;
+
+    // Custom Extraction
+    extractionRules: ExtractionRule[];
     addRule: (rule: ExtractionRule) => void;
     removeRule: (id: string) => void;
 }
@@ -83,6 +94,20 @@ export const useCrawlerStore = create<CrawlerState>()(
             rootDomain: '',
             extractionRules: [],
 
+            // Remote State
+            remoteJobs: {},
+            githubToken: '',
+
+            setGithubToken: (token) => set({ githubToken: token }),
+            addRemoteJob: (jobId, url) => set((state) => ({
+                remoteJobs: { ...state.remoteJobs, [jobId]: { url, status: 'queued', startTime: Date.now() } }
+            })),
+            updateRemoteJob: (jobId, status) => set((state) => {
+                const job = state.remoteJobs[jobId];
+                if (!job) return state;
+                return { remoteJobs: { ...state.remoteJobs, [jobId]: { ...job, status } } };
+            }),
+
             startCrawl: (url) => {
                 try {
                     const normUrl = normalizeUrl(url);
@@ -100,6 +125,14 @@ export const useCrawlerStore = create<CrawlerState>()(
             },
 
             stopCrawl: () => set({ isCrawling: false }),
+
+            reset: () => set({
+                pages: {},
+                queue: [],
+                processed: new Set(),
+                isCrawling: false,
+                remoteJobs: {}
+            }),
 
             addPage: (page) => set((state) => {
                 // Normalize the page URL key
