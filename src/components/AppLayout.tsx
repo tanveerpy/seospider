@@ -119,7 +119,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             </div>
                         </div>
                         <span className="text-xl font-black tracking-tighter text-white uppercase italic">
-                            Spider<span className="text-emerald-500">Frog</span>
+                            Crawl<span className="text-emerald-500">Logic</span>
                         </span>
                     </Link>
                     <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase mt-2 ml-1">
@@ -187,16 +187,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         Professional SEO Web Crawler
                     </div>
                 </div>
-            </aside>
+            </aside >
 
             {/* --- MAIN CONTENT --- */}
-            <main className="flex-1 flex flex-col h-screen overflow-hidden bg-cyber-grid relative min-w-0">
+            < main className="flex-1 flex flex-col h-screen overflow-hidden bg-cyber-grid relative min-w-0" >
 
                 {/* Floating Radial Glow */}
-                <div className="absolute -top-[500px] -right-[500px] w-[1000px] h-[1000px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
+                < div className="absolute -top-[500px] -right-[500px] w-[1000px] h-[1000px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
 
                 {/* Top Bar Navigation (Dynamic) */}
-                <header className="h-24 min-h-[96px] px-10 flex items-center justify-between border-b border-white/5 relative z-10 backdrop-blur-xl bg-black/10">
+                < header className="h-24 min-h-[96px] px-10 flex items-center justify-between border-b border-white/5 relative z-10 backdrop-blur-xl bg-black/10" >
 
                     <div className="flex items-center gap-8 flex-1 max-w-2xl">
                         <div className="relative flex-1 group">
@@ -253,20 +253,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             )}
                         </div>
                     </div>
-                </header>
+                </header >
 
                 {/* Content Viewport */}
-                <div className="flex-1 overflow-auto overflow-x-hidden p-10 relative">
+                < div className="flex-1 overflow-auto overflow-x-hidden p-10 relative" >
                     {children}
-                </div>
-            </main>
+                </div >
+            </main >
 
             {/* Modals overlay */}
             <AnimatePresence>
-                {showConfig && (
-                    <ConfigModal onClose={() => setShowConfig(false)} />
-                )}
-            </AnimatePresence>
-        </div>
+                {
+                    showConfig && (
+                        <ConfigModal onClose={() => setShowConfig(false)} />
+                    )
+                }
+            </AnimatePresence >
+        </div >
     );
 }
