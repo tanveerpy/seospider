@@ -109,6 +109,12 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex gap-4">
+                    <Link
+                        href="mailto:dahajsainak@gmail.com"
+                        className="px-6 py-3 rounded-2xl bg-amber-500 text-black text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:scale-105 hover:bg-amber-400"
+                    >
+                        <Zap size={14} className="fill-black" /> Hire for Dev & SEO
+                    </Link>
                     <button
                         onClick={() => generateAgencyReport(pageList)}
                         disabled={isCrawling || pageList.length === 0}

@@ -201,24 +201,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         Crawl Settings
                     </button>
 
-                    {/* Profile Section (Conceptual Login) */}
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-3 group/profile cursor-pointer hover:border-emerald-500/30 transition-all">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/20">
-                            <User size={18} className="text-emerald-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-white truncate">Administrator</div>
-                            <div className="text-[10px] text-slate-500 uppercase flex items-center gap-1 font-mono tracking-tighter">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                Live Session
+                    {/* Hire Me / Contact CTA */}
+                    <Link
+                        href="mailto:dahajsainak@gmail.com"
+                        className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 group/profile cursor-pointer hover:border-amber-500/50 transition-all block"
+                    >
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/20">
+                                <User size={18} className="text-amber-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm font-bold text-white truncate group-hover/profile:text-amber-400 transition-colors">Hire for Dev & SEO</div>
+                                <div className="text-[10px] text-amber-500 uppercase flex items-center gap-1 font-mono tracking-tighter">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+                                    Available
+                                </div>
                             </div>
                         </div>
-                        <Link href="/">
-                            <div className="p-2 text-slate-500 hover:text-red-400 transition-colors">
-                                <LogOut size={16} />
-                            </div>
-                        </Link>
-                    </div>
+                        <div className="text-[10px] text-slate-400 leading-relaxed font-medium">
+                            Expert web development and technical SEO services.
+                        </div>
+                    </Link>
 
                     <div className="px-2 text-[10px] text-slate-600 font-mono text-center">
                         Professional SEO Web Crawler
