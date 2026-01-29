@@ -61,6 +61,18 @@ interface CrawlerState {
     removeRule: (id: string) => void;
 }
 
+const normalizeUrl = (url: string) => {
+    try {
+        const u = new URL(url);
+        // Normalize: Lowercase, remove trailing slash
+        // We keep search params as they might define different pages
+        let normalized = u.origin.toLowerCase() + u.pathname.replace(/\/+$/, "") + u.search;
+        return normalized;
+    } catch {
+        return url;
+    }
+};
+
 export const useCrawlerStore = create<CrawlerState>()(
     persist(
         (set, get) => ({
@@ -73,11 +85,12 @@ export const useCrawlerStore = create<CrawlerState>()(
 
             startCrawl: (url) => {
                 try {
+                    const normUrl = normalizeUrl(url);
                     const normalizedDomain = new URL(url).hostname.replace(/^www\./, '');
                     set({
                         pages: {},
-                        queue: [url],
-                        processed: new Set([url]),
+                        queue: [normUrl],
+                        processed: new Set([normUrl]),
                         isCrawling: true,
                         rootDomain: normalizedDomain
                     });
@@ -89,8 +102,13 @@ export const useCrawlerStore = create<CrawlerState>()(
             stopCrawl: () => set({ isCrawling: false }),
 
             addPage: (page) => set((state) => {
+                // Normalize the page URL key
+                const normUrl = normalizeUrl(page.url);
+                // Ensure page object also reflects normalized URL to stay consistent
+                const normalizedPage = { ...page, url: normUrl };
+
                 // Create initial newPages map with the newest page added
-                let newPages = { ...state.pages, [page.url]: page };
+                let newPages = { ...state.pages, [normUrl]: normalizedPage };
 
                 // Global audit for duplicates
                 const titleMap: Record<string, string[]> = {};
@@ -117,7 +135,7 @@ export const useCrawlerStore = create<CrawlerState>()(
                     const hasExistingTitleDup = p.issues?.some(i => i.message === 'Page Titles: Duplicate');
                     const hasExistingDescDup = p.issues?.some(i => i.message === 'Meta Description: Duplicate');
 
-                    if (isTitleDup !== hasExistingTitleDup || isDescDup !== hasExistingDescDup || p.url === page.url) {
+                    if (isTitleDup !== hasExistingTitleDup || isDescDup !== hasExistingDescDup || p.url === normalizedPage.url) {
                         // Remove existing duplicate issues before re-adding
                         let nextIssues = (p.issues || []).filter(i => i.message !== 'Page Titles: Duplicate' && i.message !== 'Meta Description: Duplicate');
                         if (isTitleDup) nextIssues.push({ type: 'error', message: 'Page Titles: Duplicate', code: 'DUP-TITLE' });
@@ -137,13 +155,14 @@ export const useCrawlerStore = create<CrawlerState>()(
                 const newProcessed = new Set(state.processed);
 
                 urls.forEach(u => {
+                    const normUrl = normalizeUrl(u);
                     // Only enqueue if not processed and is internal
-                    if (!newProcessed.has(u)) {
+                    if (!newProcessed.has(normUrl)) {
                         try {
                             const linkHostname = new URL(u).hostname.replace(/^www\./, '');
                             if (linkHostname === state.rootDomain || linkHostname.endsWith('.' + state.rootDomain)) {
-                                newQueue.push(u);
-                                newProcessed.add(u);
+                                newQueue.push(normUrl);
+                                newProcessed.add(normUrl);
                             }
                         } catch { }
                     }

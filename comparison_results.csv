@@ -1,0 +1,26 @@
+Issue Name,CrawlLogic Count,Screaming Frog Count,Difference
+Security: Missing HSTS Header,0,88,-88
+Security: Missing X-Frame-Options Header,0,88,-88
+Security: Missing X-Content-Type-Options Header,0,88,-88
+Security: Missing Secure Referrer-Policy Header,0,88,-88
+Security: Missing Content-Security-Policy Header,0,88,-88
+Schema: Missing Structured Data,42,0,42
+H2: Multiple,0,39,-39
+Page Titles: Over 561 Pixels,0,36,-36
+Images: Over 100 KB,0,23,-23
+Meta Description: Over 985 Pixels,0,9,-9
+Headings: H2 with Missing H1,7,0,7
+Meta Description: Duplicate,8,5,3
+Page Titles: Duplicate,7,5,2
+Content: Low Content Pages,0,2,-2
+Content: Readability Difficult,0,2,-2
+Content: Thin Content (< 300 words),2,0,2
+Bot Protection: Access Restricted by Server,1,0,1
+Page Titles: Over 60 Characters,37,36,1
+H2: Multiple (High Count),1,0,1
+H1: Missing,7,6,1
+Canonicals: Missing,42,41,1
+Response Codes: Internal Client Error (4xx),0,1,-1
+Meta Description: Over 155 Characters,10,9,1
+H2: Missing,1,1,0
+Images: Missing Size Attributes,27,27,0
