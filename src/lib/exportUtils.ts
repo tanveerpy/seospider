@@ -103,7 +103,7 @@ export function exportToCSV(pages: Record<string, PageData>) {
     });
 
     const csvContent = [headers.join(','), ...rows].join('\n');
-    triggerDownload(csvContent, `spider_frog_audit_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8;');
+    triggerDownload(csvContent, `crawl_logic_audit_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8;');
 }
 
 export function exportIssuesCSV(pages: PageData[], issueType: string | null = null) {

@@ -22,7 +22,7 @@ export default function EnterprisePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-8">
                     <p className="text-lg text-slate-300 leading-relaxed">
-                        <span className="text-white font-bold">SpiderFrog</span> is built on the belief that powerful SEO tools should be accessible to everyone.
+                        <span className="text-white font-bold">CrawlLogic</span> is built on the belief that powerful SEO tools should be accessible to everyone.
                         We provide the same infrastructure used by large agencies—headless browser rendering, scalable queues, and deep analysis—without the enterprise price tag.
                     </p>
 
@@ -81,7 +81,7 @@ export default function EnterprisePage() {
             <div className="border-t border-white/5 pt-8 mt-12">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
                     <p className="text-slate-500 text-xs">
-                        &copy; {new Date().getFullYear()} SpiderFrog Online. Released under the <span className="text-emerald-500">MIT License</span>.
+                        &copy; {new Date().getFullYear()} CrawlLogic. Released under the <span className="text-emerald-500">MIT License</span>.
                     </p>
                     <div className="text-[10px] text-slate-600 font-mono uppercase tracking-wider">
                         Free Software Foundation Compatible

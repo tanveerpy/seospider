@@ -123,7 +123,7 @@ export default function LandingPage() {
                   <div className="w-3.5 h-3.5 rounded-full bg-slate-700/50" />
                 </div>
                 <div className="text-slate-500 text-[10px] uppercase font-black tracking-widest">
-                  spiderfrog-console — v2.4.0 — optimized
+                  crawllogic-console — v2.4.0 — optimized
                 </div>
                 <Activity size={12} className="text-emerald-500/50" />
               </div>

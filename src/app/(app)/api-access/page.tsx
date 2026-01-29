@@ -13,7 +13,7 @@ export default function ApiAccessPage() {
                 <h1 className="text-5xl font-black tracking-tighter italic text-white leading-tight uppercase">
                     Access <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-slate-500">API</span>
                 </h1>
-                <p className="text-slate-500 font-medium mt-2">Programmatic access to the SpiderFrog crawling engine.</p>
+                <p className="text-slate-500 font-medium mt-2">Programmatic access to the CrawlLogic crawling engine.</p>
             </div>
 
             {/* API Key Section */}
