@@ -31,7 +31,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { isCrawling, startCrawl, stopCrawl, pages, queue, popQueue, addPage, addToQueue } = useCrawlerStore();
-    const [urlInput, setUrlInput] = useState('https://writeoffcalc.com');
+    const [urlInput, setUrlInput] = useState('');
     const [showConfig, setShowConfig] = useState(false);
     const [cloudMode, setCloudMode] = useState(false);
     const pathname = usePathname();
@@ -231,7 +231,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                 value={urlInput}
                                 onChange={e => setUrlInput(e.target.value)}
                                 onFocus={e => e.target.select()}
-                                placeholder="Target URL for Analysis..."
+                                placeholder="Enter domain to crawl (e.g. https://example.com)..."
                             />
                         </div>
                     </div>
@@ -258,8 +258,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             <button
                                 onClick={() => setCloudMode(!cloudMode)}
                                 className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 border transition-all ${cloudMode
-                                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                                        : 'bg-white/5 text-slate-500 border-transparent hover:text-white'
+                                    ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                    : 'bg-white/5 text-slate-500 border-transparent hover:text-white'
                                     }`}
                                 title="Run via GitHub Actions (Serverless)"
                             >
