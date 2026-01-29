@@ -77,7 +77,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                 if (data && data.url) {
                     addPage(data);
-                    const internalLinks = data.links.filter(l => l.type === 'internal').map(l => l.url);
+                    const internalLinks = data.links.filter((l: any) => l.type === 'internal').map((l: any) => l.url);
                     addToQueue(internalLinks);
                 }
             } catch (e) { console.error(e); }
