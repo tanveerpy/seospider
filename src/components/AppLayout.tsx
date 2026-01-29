@@ -25,6 +25,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ConfigModal from '@/components/ConfigModal';
+import Toast from '@/components/Toast';
 import { crawlPageClientSide } from '@/lib/clientCrawler';
 import { dispatchCrawlJob, checkCrawlResult } from '@/lib/github-api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,8 +38,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const workerRef = useRef<boolean>(false);
 
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({
+        message: '',
+        type: 'info',
+        isVisible: false
+    });
+
+    const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+        setToast({ message, type, isVisible: true });
+    };
+
     // --- Cloud Polling Effect ---
     useEffect(() => {
+
         const pollInterval = setInterval(async () => {
             const { remoteJobs, updateRemoteJob, addPage } = useCrawlerStore.getState();
             Object.entries(remoteJobs).forEach(async ([jobId, job]) => {
@@ -277,21 +289,42 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                 <button
                                     className="flex items-center gap-2.5 px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] group hover:scale-[1.02] active:scale-[0.98]"
                                     onClick={async () => {
-                                        if (!urlInput.trim() || !/^https?:\/\/.+/.test(urlInput)) {
-                                            alert('Please enter a valid URL (http/https).');
+                                        let targetUrl = urlInput.trim();
+
+                                        if (!targetUrl) {
+                                            showToast('Please enter a website URL.', 'error');
+                                            return;
+                                        }
+
+                                        // Auto-prepend https:// if missing protocol
+                                        if (!/^https?:\/\//i.test(targetUrl)) {
+                                            targetUrl = 'https://' + targetUrl;
+                                        }
+
+                                        // Validate Logic
+                                        try {
+                                            const u = new URL(targetUrl);
+                                            if (!u.hostname.includes('.')) {
+                                                throw new Error('Invalid domain');
+                                            }
+                                            setUrlInput(targetUrl); // Update input with normalized URL
+                                        } catch (e) {
+                                            showToast('Invalid URL. Please enter a valid domain (e.g., example.com).', 'error');
                                             return;
                                         }
 
                                         if (cloudMode) {
                                             try {
-                                                const jobId = await dispatchCrawlJob(urlInput);
-                                                useCrawlerStore.getState().addRemoteJob(jobId, urlInput);
-                                                alert(`Cloud Crawl Started! Job ID: ${jobId}. Results will appear shortly.`);
+                                                const jobId = await dispatchCrawlJob(targetUrl);
+                                                useCrawlerStore.getState().addRemoteJob(jobId, targetUrl);
+                                                showToast(`Cloud Crawl Started! Job ID: ${jobId}`, 'success');
                                             } catch (e: any) {
-                                                alert(`Cloud Dispatch Failed: ${e.message}`);
+                                                showToast(`Cloud Dispatch Failed: ${e.message}`, 'error');
                                             }
                                         } else {
-                                            startCrawl(urlInput);
+                                            startCrawl(targetUrl);
+                                            // Optional: Show success toast briefly
+                                            // showToast('Crawl started!', 'success'); 
                                         }
                                     }}
                                 >
@@ -317,6 +350,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     )
                 }
             </AnimatePresence >
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                isVisible={toast.isVisible}
+                onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
+            />
         </div >
     );
 }
