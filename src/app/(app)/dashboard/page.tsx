@@ -29,6 +29,69 @@ export default function Dashboard() {
     const avgLoad = pageList.length > 0 ? (pageList.reduce((acc, p) => acc + p.time, 0) / pageList.length).toFixed(0) : 0;
     const internalLinks = pageList.reduce((acc, p) => acc + p.links.filter(l => l.type === 'internal').length, 0);
 
+    // --- Dynamic Health Score ---
+    const calculateHealthScore = () => {
+        if (totalUrls === 0) return 0;
+        const totalErrors = pageList.reduce((acc, p) => acc + p.issues.filter(i => i.type === 'error').length, 0);
+        const totalWarnings = pageList.reduce((acc, p) => acc + p.issues.filter(i => i.type === 'warning').length, 0);
+
+        // Base 100. 
+        // Penalize: -10 per Error/Page ratio, -2 per Warning/Page ratio
+        // Example: 10 pages, 5 errors = 0.5 ratio * 20 = -10 points
+        const errorPenalty = (totalErrors / totalUrls) * 20;
+        const warningPenalty = (totalWarnings / totalUrls) * 5;
+
+        // Cap deduction to 100? No, min score 0.
+        let score = 100 - errorPenalty - warningPenalty;
+        return Math.max(0, Math.min(100, Math.round(score)));
+    };
+    const healthScore = calculateHealthScore();
+
+    // --- Issue Distribution ---
+    const calcDistribution = () => {
+        let metadata = 0;
+        let links = 0;
+        let critical = 0;
+        let performance = 0;
+
+        pageList.forEach(p => {
+            // Check Performance (Time > 1000ms is a "soft" issue to count here)
+            if (p.time > 800) performance++;
+
+            p.issues.forEach(i => {
+                const msg = i.message.toLowerCase();
+                const code = i.code || '';
+
+                if (i.type === 'error') critical++;
+
+                if (msg.includes('title') || msg.includes('description') || msg.includes('meta') || msg.includes('h1') || msg.includes('h2')) {
+                    metadata++;
+                } else if (msg.includes('link') || msg.includes('redirect') || code === '404' || code === 'Broken') {
+                    links++;
+                }
+            });
+        });
+
+        // Normalize to percentages relative to total ISSUES (for bars) 
+        // usually bars are "Count" or "% of Total Issues". 
+        // Let's use Count for value, but pass max to bar for width logic if needed? 
+        // The component expects a % value provided currently in the UI usually.
+        // Let's stick to "Count" but visualized as a filled bar against a nominal max?
+        // Actually the current ProgressBar component takes 'value' as %.
+        // Let's change the bar to accept max or just show relative distribution.
+        // For now, let's just assume 100 is "Bad".
+
+        const total = metadata + links + critical + performance || 1;
+
+        return {
+            metadata: Math.round((metadata / total) * 100),
+            links: Math.round((links / total) * 100),
+            critical: Math.round((critical / total) * 100),
+            performance: Math.round((performance / total) * 100)
+        };
+    };
+    const dist = calcDistribution();
+
     return (
         <div className="space-y-12">
 
@@ -70,7 +133,7 @@ export default function Dashboard() {
                     value={totalUrls}
                     icon={Globe}
                     color="emerald"
-                    trend="+12%"
+                    trend={isCrawling ? "Active" : "Ready"}
                     sub="Total Discovered"
                     href="/inventory"
                 />
@@ -79,8 +142,8 @@ export default function Dashboard() {
                     value={issuesFound}
                     icon={ShieldAlert}
                     color="red"
-                    trend="-24%"
-                    sub="Critical Errors"
+                    trend={issuesFound > 0 ? "Requires Action" : "Clean"}
+                    sub="Critical & Warnings"
                     href="/audit"
                 />
                 <StatCard
@@ -89,7 +152,7 @@ export default function Dashboard() {
                     icon={Clock}
                     color="yellow"
                     suffix="ms"
-                    trend="Stable"
+                    trend={Number(avgLoad) < 500 ? "Fast" : Number(avgLoad) < 1000 ? "Moderate" : "Slow"}
                     sub="Mean Performance"
                     href="/audit"
                 />
@@ -98,7 +161,7 @@ export default function Dashboard() {
                     value={internalLinks}
                     icon={Link2}
                     color="cyan"
-                    trend="+1k"
+                    trend={`${(internalLinks / (totalUrls || 1)).toFixed(1)} avg`}
                     sub="Found Connections"
                     href="/visualizations"
                 />
@@ -115,8 +178,8 @@ export default function Dashboard() {
                                 <Activity size={18} className="text-emerald-500" />
                                 <h3 className="text-lg font-black italic tracking-tighter text-white uppercase">Crawl Activity Log</h3>
                             </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">
-                                Streaming
+                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${isCrawling ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-500'}`}>
+                                {isCrawling ? 'Streaming' : 'Idle'}
                             </div>
                         </div>
                         <div className="p-8 h-[400px] overflow-y-auto font-mono text-xs text-slate-500 bg-black/20">
@@ -138,7 +201,7 @@ export default function Dashboard() {
                                                 animate={{ opacity: 1, x: 0 }}
                                                 className="flex gap-4 group cursor-pointer hover:bg-white/5 p-2 -m-2 rounded-lg transition-colors"
                                             >
-                                                <span className="text-emerald-900 font-bold">[{new Date().toLocaleTimeString('en-GB')}]</span>
+                                                <span className="text-emerald-900 font-bold">[{new Date(p.time).toLocaleTimeString('en-GB')}]</span>
                                                 <span className="text-cyan-500 italic">CRAWLED</span>
                                                 <span className="text-slate-300 truncate opacity-80 group-hover:opacity-100 group-hover:text-emerald-400 transition-all font-medium">
                                                     {p.url}
@@ -172,10 +235,12 @@ export default function Dashboard() {
                         </h3>
                         <div className="relative h-64 flex items-center justify-center">
                             <div className="absolute w-48 h-48 rounded-full border-[1.5px] border-white/5 flex items-center justify-center">
-                                <div className="absolute w-56 h-56 rounded-full border-[1.5px] border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                                <div className="absolute w-56 h-56 rounded-full border-[1.5px] border-emerald-500/20 border-t-emerald-500 transition-all duration-1000" style={{ transform: `rotate(${3.6 * healthScore}deg)` }} />
                                 <div className="text-center">
-                                    <div className="text-6xl font-black italic text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.3)] tabular-nums">84%</div>
-                                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Excellent</div>
+                                    <div className="text-6xl font-black italic text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.3)] tabular-nums">{healthScore}%</div>
+                                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">
+                                        {healthScore >= 90 ? 'Excellent' : healthScore >= 70 ? 'Good' : healthScore >= 50 ? 'Fair' : 'Critical'}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -184,10 +249,10 @@ export default function Dashboard() {
                     <div className="glass-card rounded-[32px] p-8">
                         <h3 className="text-lg font-black italic tracking-tighter text-white uppercase mb-6">Issue Distribution</h3>
                         <div className="space-y-5">
-                            <ProgressBar label="Metadata Gaps" value={42} color="emerald" />
-                            <ProgressBar label="Link Issues" value={18} color="cyan" />
-                            <ProgressBar label="Critical Errors" value={65} color="red" />
-                            <ProgressBar label="Load Performance" value={30} color="yellow" />
+                            <ProgressBar label="Metadata Gaps" value={dist.metadata} color="emerald" />
+                            <ProgressBar label="Link Issues" value={dist.links} color="cyan" />
+                            <ProgressBar label="Critical Errors" value={dist.critical} color="red" />
+                            <ProgressBar label="Load Performance" value={dist.performance} color="yellow" />
                         </div>
                     </div>
                 </div>
