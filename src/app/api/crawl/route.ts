@@ -349,35 +349,62 @@ export async function POST(request: Request) {
             });
 
             // --- Image Auditing (New Feature) ---
+            const imageAssets: any[] = [];
             $('img').each((_, el) => {
                 const src = $(el).attr('src');
                 const alt = $(el).attr('alt') || '';
 
                 if (src) {
-                    const missingAlt = !$(el).attr('alt'); // True if attribute is completely missing
+                    try {
+                        const absUrl = new URL(src, url).href;
+                        const missingAlt = !$(el).attr('alt');
 
-                    pageData.assets.push({
-                        url: src,
-                        type: 'image',
-                        alt: alt,
-                        missingAlt: missingAlt
-                    });
+                        imageAssets.push({
+                            url: absUrl,
+                            type: 'image',
+                            alt: alt,
+                            missingAlt: missingAlt,
+                            originalSrc: src // Keep track for later
+                        });
 
-                    if (missingAlt) {
-                        pageData.issues.push({
-                            type: 'warning',
-                            message: 'Images: Missing Alt Text',
-                            code: 'IMG-NO-ALT'
-                        });
-                    } else if (alt.length > 100) {
-                        pageData.issues.push({
-                            type: 'info',
-                            message: 'Images: Alt Text Over 100 Chars',
-                            code: 'IMG-LONG-ALT'
-                        });
-                    }
+                        if (missingAlt) {
+                            pageData.issues.push({
+                                type: 'warning',
+                                message: 'Images: Missing Alt Text',
+                                code: 'IMG-NO-ALT'
+                            });
+                        } else if (alt.length > 100) {
+                            pageData.issues.push({
+                                type: 'info',
+                                message: 'Images: Alt Text Over 100 Chars',
+                                code: 'IMG-LONG-ALT'
+                            });
+                        }
+                    } catch { }
                 }
             });
+
+            // Check Image Sizes (Limit to first 15 to preserve performance)
+            // Use Promise.all for parallel checking
+            await Promise.all(imageAssets.slice(0, 15).map(async (img) => {
+                try {
+                    const headRes = await axios.head(img.url, { timeout: 3000, validateStatus: () => true });
+                    const size = parseInt(headRes.headers['content-length'] || '0', 10);
+                    img.size = size;
+
+                    if (size > 102400) { // 100 KB
+                        pageData.issues.push({
+                            type: 'warning',
+                            message: 'Images: Over 100 KB',
+                            code: 'IMG-LARGE'
+                        });
+                    }
+                } catch {
+                    // Ignore network errors for images
+                }
+            }));
+
+            pageData.assets = imageAssets;
         }
 
         // --- Performance Checks ---

@@ -21,7 +21,7 @@ export interface PageData {
     size: number;
     time: number;
     links: { url: string; type: 'internal' | 'external' }[];
-    assets: { url: string; type: 'image' | 'css' | 'javascript'; alt?: string; missingAlt?: boolean }[];
+    assets: { url: string; type: 'image' | 'css' | 'javascript'; alt?: string; missingAlt?: boolean; size?: number; }[];
     details: {
         title: string;
         titlePixelWidth?: number;
